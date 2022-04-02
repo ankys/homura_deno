@@ -1,0 +1,257 @@
+
+import { Config } from "./core/config.ts";
+import { Runtime, Engines, Cache, loadConfig, loadSite } from "./core/site.ts";
+import { getOutput, buildDest } from "./core/build.ts";
+import { startServer } from "./core/server.ts";
+import * as MarkdownEngine from "./plugin/markdown.ts";
+// import * as MustacheEngine from "./plugin/mustache.ts";
+import * as NunjucksEngine from "./plugin/nunjucks.ts";
+import * as RelativeUrlEngine from "./plugin/relurl.ts";
+
+import * as Flags from "https://deno.land/std@0.132.0/flags/mod.ts";
+
+const defaultConfigFiles: string[] = [
+	// "_config.ts",
+	// "_config.js",
+	"_config.yml",
+	"_config.yaml",
+	"_config.toml",
+	"_config.json",
+];
+const defaultConfig: Config = {
+	src: ".",
+	dest: "_site",
+	baseurl: "http://localhost:3000/",
+	index: [
+		"index.html",
+		"index.htm",
+	],
+	datas: [
+		// "_data.ts",
+		// "_data.js",
+		"_data.yml",
+		"_data.yaml",
+		"_data.toml",
+		"_data.json",
+	],
+	include: "_includes",
+	layouts: [
+		// { name: "default", filepath: "_layout/default.n.html", engine: "t,relurl" },
+	],
+	statics: [
+	],
+	dynamics: [
+		{ pattern: ".t", replace: "", engine: "t", layout: "" },
+		// { type: "name", re: /(.*)\.n\.html/, str: "$1.html", engine: "njk", layout: "default" },
+		// { type: "name", re: /(.*)\.n\.md/, str: "$1.html", engine: "njk,md", layout: "default" },
+	],
+	ignores: [
+		// "_*",
+	],
+	dry_run: false,
+	deploy: [
+		"_deploy.sh",
+	],
+};
+const emptyConfigFiles: string[] = [
+];
+const emptyConfig: Config = {
+	src: undefined,
+	dest: undefined,
+	baseurl: undefined,
+	index: undefined,
+	datas: undefined,
+	include: undefined,
+	layouts: undefined,
+	statics: undefined,
+	dynamics: undefined,
+	ignores: undefined,
+	dry_run: undefined,
+	deploy: undefined,
+};
+
+async function mainBuild(rt: Runtime) {
+	const site = await loadSite(rt);
+	await buildDest(site, rt);
+	return 0;
+}
+async function mainDeploy(rt: Runtime) {
+	// const config = await loadConfig(rt);
+	// const deploys = config.deploy!;
+	// showMessage("🔥", command);
+	// const process = Deno.run({ cmd: command.split(" ") });
+	// const status = await process.status();
+	// if (!status.success) {
+	// 	showMessage("⚠️", command, "\x1b[2m", status.code, "\x1b[0m");
+	// }
+	// return status.code;
+}
+async function mainServer(rt: Runtime) {
+	await startServer(rt);
+	return 0;
+}
+async function mainInfo(rt: Runtime) {
+	const config = await loadConfig(rt);
+	console.log(config);
+	return 0;
+}
+async function mainList(rt: Runtime) {
+	const site = await loadSite(rt);
+	// console.log(site);
+	for (const path of Object.keys(site.destFiles)) {
+		console.log(path);
+	}
+	return 0;
+}
+async function mainOutput(rt: Runtime, path: string) {
+	const site = await loadSite(rt);
+	const destFiles = site.destFiles;
+	const destFile = destFiles[path];
+	if (!destFile) {
+		console.error("⚠️", path);
+		return 1;
+	}
+	const text = await getOutput(destFile, path, site, rt);
+	console.log(text);
+	return 0;
+}
+
+// async function mainNew(path: string, rt: Runtime) {
+// 	if (await FSExists(path)) {
+// 		showMessage("⚠️", path);
+// 		return 1;
+// 	}
+// 	showMessage("🔥", path);
+// 	await Deno.mkdir(path, { recursive: true });
+// 	Deno.chdir(path);
+// 	const config1 = new Config();
+// 	for (const file of rt.configFiles) {
+// 		config1.addConfig(file);
+// 	}
+// 	config1.setup(rt.envConfigDefault);
+// 	const configFiles = config1.configs;
+// 	const files: { [num: string]: File } = {};
+// 	for (let i = 0; i < configFiles.length; i++) {
+// 		const file = configFiles[i];
+// 		const { path, type } = file;
+// 		const num = String(i + 1);
+// 		if (type) {
+// 			showMessage("[" + num + "]", path, "\x1b[2m", type, "\x1b[0m");
+// 		} else {
+// 			showMessage("[" + num + "]", path);
+// 		}
+// 		files[num] = file;
+// 	}
+// 	showMessage("[0]", "Do nothing");
+// 	while (true) {
+// 		const line = await IOReadLine("❓");
+// 		const num = line!;
+// 		if (num == "" || num == "0") {
+// 			break;
+// 		}
+// 		const file = files[num];
+// 		if (file) {
+// 			const { path, type } = file;
+// 			if (type) {
+// 				showMessage("🔥", path, "\x1b[2m", type, "\x1b[0m");
+// 			} else {
+// 				showMessage("🔥", path);
+// 			}
+// 			const process = Deno.run({ cmd: ["editor", path] });
+// 			const status = await process.status();
+// 			break;
+// 		}
+// 	}
+// 	const config = await loadConfig(rt);
+// 	const srcDir = config.src!;
+// 	showMessage("🔥", srcDir);
+// 	await Deno.mkdir(srcDir, { recursive: true });
+// 	return 0;
+// }
+// async function mainEdit(pathname: string, rt: Runtime) {
+// 	const site = await loadSite(rt);
+// 	const indexFiles = site.config.index;
+// 	const destFiles = site.destFiles;
+// 	const paths = Pathname.resolve(pathname, indexFiles);
+// 	const path = paths.find((path) => path in destFiles)!;
+// 	const destFile = destFiles[path];
+// 	const { path: pathDest, srcFile, dynamicInfo } = destFile;
+// 	const { path: pathSrc, filepath: filepathSrc } = srcFile;
+// 	showMessage("🔥", pathname, "\x1b[2m", filepathSrc, "\x1b[0m");
+// 	const process = Deno.run({ cmd: ["editor", filepathSrc] });
+// 	const status = await process.status();
+// 	return status.code;
+// }
+
+function getStringArray(value: unknown) {
+	if (Array.isArray(value)) {
+		return value;
+	} else if (typeof value == "string") {
+		return [value];
+	}
+	return [];
+}
+async function main(args: string[]) {
+	const options = Flags.parse(args);
+	// console.log(options);
+
+	let configEmpty = false;
+	let configs = [];
+	let configOption: Config = {
+	};
+	for (const [key, value] of Object.entries(options)) {
+		if (key == "_") {
+		} else if (key == "empty-config") {
+			configEmpty = !!value;
+		} else if (key == "config") {
+			configs = getStringArray(value);
+		} else if (key == "n" || key == "dry-run") {
+			configOption.dry_run = !!value;
+		} else {
+			console.error("⚠️", key);
+		}
+	}
+	// console.log(configOption);
+
+	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
+	const configFiles = configs.concat(configFilesDefault);
+	const engines: Engines = {};
+	engines["md"] = MarkdownEngine.convert;
+	engines["njk"] = NunjucksEngine.convert;
+	engines["t"] = NunjucksEngine.convert;
+	engines["relurl"] = RelativeUrlEngine.convert;
+	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
+	const rt: Runtime = { configFiles, configDefault, configOption, engines, cache };
+
+	const command = options._[0];
+	if (!command) {
+		return await mainServer(rt);
+	} else if (command == "build" || command == "b") {
+		return await mainBuild(rt);
+	// } else if (command == "deploy" || command == "d") {
+	// 	return await mainDeploy(rt);
+	} else if (command == "server" || command == "s") {
+		return await mainServer(rt);
+	} else if (command == "info" || command == "i") {
+		return await mainInfo(rt);
+	} else if (command == "list" || command == "l") {
+		return await mainList(rt);
+	} else if (command == "output" || command == "o") {
+		const path = String(options._[1]);
+		return await mainOutput(rt, path);
+	// } else if (command == "new" || command == "n") {
+	// 	const path = String(options._[1]);
+	// 	return await mainNew(path, rt);
+	// } else if (command == "edit" || command == "e") {
+	// 	const path = String(options._[1]);
+	// 	return await mainEdit(path, rt);
+	} else {
+		console.error("⚠️", command);
+		return 1;
+	}
+}
+
+if (import.meta.main) {
+	const code = await main(Deno.args);
+	Deno.exit(code);
+}

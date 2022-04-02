@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>{{ [title] | join(" | ") }}</title>
+<meta name="author" content="{{ author | default("") }}" />
+<meta name="keywords" content="{{ keywords | default([]) | join(',') }}" />
+<meta name="description" content="{{ description | default("") }}" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link rel="stylesheet" type="text/css" href="/default.css">
+</head>
+<body>
+<div style="max-width: 50em; margin-left: auto; margin-right: auto;">
+<header>
+<nav id="main-nav">
+<h1>{{ title | default(path) }}</h1>
+</nav>
+</header>
+
+<hr />
+
+<article>
+{{ content }}
+{{ content | safe }}
+</article>
+
+<hr />
+
+<footer style="font-size: small;">
+<div><code>{{ path }}</code></div>
+<div><code>{{ path | pathname }}</code></div>
+<div><code>{{ ("." + path | pathname) | url("http://localhost/a/") }}</code></div>
+<div>Last modified: <code>{{ mtime | date }}</code>.</div>
+</footer>
+</div>
+</body>
+<script src="https://kit.fontawesome.com/d9f4fb551b.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="/default.css">
+</html>

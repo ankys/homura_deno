@@ -1,0 +1,146 @@
+
+import { TLValue } from "./value.ts";
+import { Runtime, Site, DestFile, DestFiles, loadSrcFile } from "./site.ts";
+
+import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
+import * as FS from "https://deno.land/std@0.132.0/fs/mod.ts";
+
+export async function FSGetMtime(filepath: string): Promise<Date> {
+	try {
+		const info = await Deno.stat(filepath);
+		const mtime = info.mtime!;
+		return mtime;
+	} catch (e) {
+		return new Date();
+	}
+}
+async function FSIsEmptyDirectory(path: string) {
+	for await (const entry of Deno.readDir(path)) {
+		return false;
+	}
+	return true;
+}
+
+async function convertText(text: string, engine: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+	const engines = rt.engines;
+	for (const name of engine.split(",")) {
+		if (name === "") {
+			continue;
+		}
+		const engine = engines[name];
+		if (engine) {
+			text = await engine(text, values, destFile, site, rt);
+		}
+	}
+	return text;
+}
+export async function buildDynamic(destFile: DestFile, title: string, site: Site, rt: Runtime): Promise<string> {
+	const cache = rt.cache;
+	const layoutCaches = site.layoutCaches;
+	const srcFile = destFile.srcFile;
+	const dynamicInfo = destFile.dynamicInfo!;
+	const filepathSrc = srcFile.filepath;
+	const engine = dynamicInfo.engine;
+	const layoutName = dynamicInfo.layout;
+	const layout = layoutCaches[layoutName];
+	if (layout) {
+		const filepathLayout = layout.filepath;
+		const engineLayout = layout.engine;
+		const valueLayout = layout.value;
+		const textLayout = layout.text;
+		console.error("🔥", title, "\x1b[2m", filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")", "\x1b[0m");
+		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
+		const text2 = await convertText(text, engine, [value], destFile, site, rt);
+		const valueContent: TLValue = { "content": text2 };
+		const text3 = await convertText(textLayout, engineLayout, [valueLayout, value, valueContent], destFile, site, rt);
+		return text3;
+	} else {
+		console.error("🔥", title, "\x1b[2m", filepathSrc, "(" + engine + ")", "\x1b[0m");
+		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
+		const text2 = await convertText(text, engine, [value], destFile, site, rt);
+		return text2;
+	}
+}
+
+export async function getOutput(destFile: DestFile, title: string, site: Site, rt: Runtime): Promise<string | Uint8Array> {
+	if (destFile.dynamicInfo) {
+		const t1 = performance.now();
+		const text = await buildDynamic(destFile, title, site, rt);
+		const t2 = performance.now();
+		console.error("⏱", "\x1b[2m", "get_output", (t2 - t1).toFixed() + "ms", "\x1b[0m")
+		return text;
+	} else {
+		const srcFile = destFile.srcFile;
+		const filepathSrc = srcFile.filepath;
+		console.error("🔥", title, "\x1b[2m", filepathSrc, "\x1b[0m");
+		const buf = await Deno.readFile(filepathSrc);
+		return buf;
+	}
+}
+
+export async function buildDest(site: Site, rt: Runtime) {
+	const config = site.config;
+	const destFiles = site.destFiles;
+	const destDir = config.dest!;
+	const modeDryRun = config.dry_run!;
+
+	async function sub(filepathDir: string, pathDir: string) {
+		for await (const entry of Deno.readDir(filepathDir)) {
+			const name = entry.name;
+			const filepath = Path.join(filepathDir, name);
+			const path = pathDir + "/" + name;
+			if (entry.isDirectory) {
+				await sub(filepath, path);
+				if (await FSIsEmptyDirectory(filepath)) {
+					if (!modeDryRun) {
+						await Deno.remove(filepath);
+					}
+				}
+			}
+			if (entry.isFile) {
+				if (!destFiles[path]) {
+					console.error("⚠️", filepath);
+					if (!modeDryRun) {
+						await Deno.remove(filepath);
+					}
+				}
+			}
+		}
+	}
+	try {
+		await sub(destDir, "");
+	} catch { }
+	
+	for (const [pathDest, destFile] of Object.entries(destFiles)) {
+		const filepathDest = destDir + pathDest;
+		if (destFile.dynamicInfo) {
+			const text = await getOutput(destFile, filepathDest, site, rt) as string;
+			if (!modeDryRun) {
+				await FS.ensureFile(filepathDest);
+				await Deno.writeTextFile(filepathDest, text);
+			}
+		} else {
+			const srcFile = destFile.srcFile;
+			const filepathSrc = srcFile.filepath;
+			const mtimeSrc = await FSGetMtime(filepathSrc);
+			async function main() {
+				console.error("🔥", filepathDest, "\x1b[2m", filepathSrc, "\x1b[0m");
+				if (!modeDryRun) {
+					await FS.ensureFile(filepathDest);
+					await Deno.copyFile(filepathSrc, filepathDest);
+				}
+			}
+			try {
+				const infoDest = await Deno.stat(filepathDest);
+				const mtimeDest = infoDest.mtime;
+				if (mtimeSrc && mtimeDest && mtimeSrc > mtimeDest) {
+					await main();
+				} else {
+					// showMessage("ℹ", "\x1b[2m", pathDest, "\x1b[0m");
+				}
+			} catch {
+				await main();
+			}
+		}
+	}
+}

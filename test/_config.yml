@@ -1,0 +1,36 @@
+layouts:
+  - name: default
+    filepath: _layout/default.n.html
+    engine: t,relurl
+dynamics:
+  - pattern: .t
+    replace: ""
+    engine: t
+    layout: ""
+  - pattern: .njk
+    replace: ""
+    engine: njk
+    layout: ""
+  - pattern: .n.html
+    replace: .html
+    engine: t
+    layout: default
+  - pattern: .n.md
+    replace: .html
+    engine: t,md
+    layout: default
+ignores:
+  - "_*"
+#   - "$RECYCLE.BIN"
+#   - ".Trashes"
+#   - ".fseventsd"
+#   - ".TemporaryItems"
+#   - ".DS_Store"
+#   - "#*#"
+#   - ".#*"
+#   - "._*"
+#   - "*~"
+#   - "*.stackdump"
+#   - "*.bak"
+# dry_run: true
+# deploy: "echo aaa"
