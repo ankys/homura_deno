@@ -32,7 +32,7 @@ username: James
 Start a server:
 
 ```
-deno run -A homura.ts
+deno run -A https://deno.land/x/homura_deno/homura.ts
 ```
 
 Then, your page can be found in <http://localhost:8000/>.
@@ -40,7 +40,7 @@ Then, your page can be found in <http://localhost:8000/>.
 Or build it:
 
 ```
-deno run -A homura.ts build
+deno run -A https://deno.land/x/homura_deno/homura.ts build
 ```
 
 This command will generate your html file in the directory `_site`.
