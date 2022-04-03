@@ -3,11 +3,11 @@
 
 **Homura** is the Japanese word for *fire* but also a (yet another) general-purpose static site generator, highly inspired by [Jekyll](https://jekyllrb.com/) and [Lume](https://lume.land/).
 
-Features:
+[![deno.land/x/homura_deno](https://shield.deno.dev/x/homura_deno)](https://deno.land/x/homura_deno/)
+
+## Features
 
 - Smart server mode for testing.
-
----
 
 ## Quick start
 
@@ -44,8 +44,6 @@ deno run -A https://deno.land/x/homura_deno/homura.ts build
 ```
 
 This command will generate your html file in the directory `_site`.
-
----
 
 ## License
 
