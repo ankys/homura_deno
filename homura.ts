@@ -1,4 +1,5 @@
 
+import { version } from "./version.ts";
 import { Config } from "./core/config.ts";
 import { Runtime, Engines, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
@@ -8,7 +9,7 @@ import * as MarkdownEngine from "./plugin/markdown.ts";
 import * as NunjucksEngine from "./plugin/nunjucks.ts";
 import * as RelativeUrlEngine from "./plugin/relurl.ts";
 
-import * as Flags from "https://deno.land/std@0.132.0/flags/mod.ts";
+import * as Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts"
 
 const defaultConfigFiles: string[] = [
 	// "_config.ts",
@@ -192,26 +193,26 @@ function getStringArray(value: unknown) {
 	return [];
 }
 async function main(args: string[]) {
-	const options = Flags.parse(args);
+	const yargs = Yargs.default(args).scriptName("homura").version(version);
+	yargs.command(["build", "b"], "build site");
+	yargs.command(["server", "s", "*"], "start server mode");
+	yargs.command(["info", "i"], "output configs");
+	yargs.command(["list", "l"], "list path of files");
+	yargs.command(["output <path>", "o"], "output a specific file");
+	yargs.option("empty-config", { describe: "ignore default configs", type: "boolean" });
+	yargs.option("config", { describe: "load config file", type: "string" });
+	yargs.option("dry-run", { alias: 'n', describe: "run with no file writing", type: "boolean" });
+	const options = yargs.parse();
 	// console.log(options);
 
 	let configEmpty = false;
 	let configs = [];
 	let configOption: Config = {
 	};
-	for (const [key, value] of Object.entries(options)) {
-		if (key == "_") {
-		} else if (key == "empty-config") {
-			configEmpty = !!value;
-		} else if (key == "config") {
-			configs = getStringArray(value);
-		} else if (key == "n" || key == "dry-run") {
-			configOption.dry_run = !!value;
-		} else {
-			console.error("⚠️", key);
-		}
-	}
-	// console.log(configOption);
+	configEmpty = !!options["empty-config"];
+	configs = getStringArray(options["config"]);
+	configOption.dry_run = !!options["dry-run"];
+	// console.log(configs);
 
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
@@ -237,7 +238,7 @@ async function main(args: string[]) {
 	} else if (command == "list" || command == "l") {
 		return await mainList(rt);
 	} else if (command == "output" || command == "o") {
-		const path = String(options._[1]);
+		const path = options.path;
 		return await mainOutput(rt, path);
 	// } else if (command == "new" || command == "n") {
 	// 	const path = String(options._[1]);
