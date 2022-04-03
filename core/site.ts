@@ -135,7 +135,7 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 	return srcFiles;
 }
 
-function normalizePath(path: string): string {
+export function normalizePath(path: string): string {
 	return path.replace(/(^|\/)\/*/g, "/");
 }
 type Matcher = RegExp;
