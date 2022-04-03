@@ -200,8 +200,12 @@ async function main(args: string[]) {
 	yargs.command(["list", "l"], "list path of files");
 	yargs.command(["output <path>", "o"], "output a specific file");
 	yargs.option("empty-config", { describe: "ignore default configs", type: "boolean" });
-	yargs.option("config", { describe: "load config file", type: "string" });
-	yargs.option("dry-run", { alias: 'n', describe: "run with no file writing", type: "boolean" });
+	yargs.option("config", { alias: "c", describe: "load config file", type: "string" });
+	yargs.option("src", { alias: "s", describe: "source directory", type: "string" });
+	yargs.option("dest", { alias: "d", describe: "output directory", type: "string" });
+	yargs.option("data", { describe: "custom data file", type: "string" });
+	yargs.option("include", { describe: "custom file directory", type: "string" });
+	yargs.option("dry-run", { alias: "n", describe: "run with no file writing", type: "boolean" });
 	const options = yargs.parse();
 	// console.log(options);
 
@@ -211,6 +215,10 @@ async function main(args: string[]) {
 	};
 	configEmpty = !!options["empty-config"];
 	configs = getStringArray(options["config"]);
+	configOption.src = options["src"];
+	configOption.dest = options["dest"];
+	configOption.datas = getStringArray(options["data"]);
+	configOption.include = options["include"];
 	configOption.dry_run = !!options["dry-run"];
 	// console.log(configs);
 
