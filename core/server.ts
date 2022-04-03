@@ -6,8 +6,8 @@ import { getOutput } from "./build.ts";
 import * as HTTPServer from "https://deno.land/std@0.132.0/http/server.ts";
 
 export async function startServer(rt: Runtime) {
-	const serverUrl = new URL("http://localhost:8000/");
-	const hostname = "0.0.0.0";
+	const serverUrl = rt.serverUrl;
+	const hostname = rt.serverAddress;
 	const port = Number(serverUrl.port || 8000);
 	const pathnameRoot = serverUrl.pathname;
 	async function sub(req: Request) {

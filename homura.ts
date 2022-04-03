@@ -199,13 +199,15 @@ async function main(args: string[]) {
 	yargs.command(["info", "i"], "output configs");
 	yargs.command(["list", "l"], "list path of files");
 	yargs.command(["output <path>", "o"], "output a specific file");
-	yargs.option("empty-config", { describe: "ignore default configs", type: "boolean" });
+	yargs.option("ignore-config", { describe: "ignore default configs", type: "boolean" });
 	yargs.option("config", { alias: "c", describe: "load config file", type: "string" });
 	yargs.option("src", { alias: "s", describe: "source directory", type: "string" });
 	yargs.option("dest", { alias: "d", describe: "output directory", type: "string" });
 	yargs.option("data", { describe: "custom data file", type: "string" });
 	yargs.option("include", { describe: "custom file directory", type: "string" });
 	yargs.option("dry-run", { alias: "n", describe: "run with no file writing", type: "boolean" });
+	yargs.option("server", { describe: "url used in server mode", type: "string", default: "http://localhost:8000/" });
+	yargs.option("listen", { describe: "address used in server mode", type: "string", default: "0.0.0.0" });
 	const options = yargs.parse();
 	// console.log(options);
 
@@ -213,13 +215,15 @@ async function main(args: string[]) {
 	let configs = [];
 	let configOption: Config = {
 	};
-	configEmpty = !!options["empty-config"];
+	configEmpty = !!options["ignore-config"];
 	configs = getStringArray(options["config"]);
 	configOption.src = options["src"];
 	configOption.dest = options["dest"];
 	configOption.datas = getStringArray(options["data"]);
 	configOption.include = options["include"];
 	configOption.dry_run = !!options["dry-run"];
+	const serverUrl = new URL(options["server"]);
+	const serverAddress = options["listen"];
 	// console.log(configs);
 
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
@@ -230,7 +234,7 @@ async function main(args: string[]) {
 	engines["t"] = NunjucksEngine.convert;
 	engines["relurl"] = RelativeUrlEngine.convert;
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
-	const rt: Runtime = { configFiles, configDefault, configOption, engines, cache };
+	const rt: Runtime = { configFiles, configDefault, configOption, serverUrl, serverAddress, engines, cache };
 
 	const command = options._[0];
 	if (!command) {

@@ -12,7 +12,7 @@ export type Cache = {
 	cacheLayout: { [filepath: string]: [Deno.FileInfo, TLValue | null, string] },
 	cacheSrc: { [filepath: string]: [Deno.FileInfo, TLValue | null] },
 }
-export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, engines: Engines, cache: Cache };
+export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, serverUrl: URL, serverAddress: string, engines: Engines, cache: Cache };
 
 export async function loadConfigFiles(files: string[], config: Config, cache: Cache) {
 	for await (const file of files) {
