@@ -4,15 +4,14 @@ import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
-export type Engine = (text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
-export type Engines = { [name: string]: Engine };
+export type Convert = (text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },
 	cacheData: { [file: string]: [Deno.FileInfo, TLValue | null] },
 	cacheLayout: { [filepath: string]: [Deno.FileInfo, TLValue | null, string] },
 	cacheSrc: { [filepath: string]: [Deno.FileInfo, TLValue | null] },
 }
-export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, serverUrl: URL, serverAddress: string, engines: Engines, cache: Cache };
+export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, serverUrl: URL, serverAddress: string, cache: Cache };
 
 export async function loadConfigFiles(files: string[], config: Config, cache: Cache) {
 	for await (const file of files) {

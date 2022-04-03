@@ -6,6 +6,7 @@ function toA<T>(list?: T[]): T[] {
 	return list;
 }
 
+export type Engine = { name: string, url: string };
 export type Layout = { name: string, filepath: string, engine: string };
 export type Static = { pattern: string, replace: string };
 export type Dynamic = { pattern: string, replace: string, engine: string, layout: string };
@@ -16,6 +17,7 @@ export type Config = {
 	index?: string[];
 	datas?: string[];
 	include?: string;
+	engines?: Engine[];
 	layouts?: Layout[];
 	statics?: Static[];
 	dynamics?: Dynamic[];
@@ -30,12 +32,13 @@ export function mergeConfig(config1: Config, config2: Config): Config {
 	const index = toA(config1.index).concat(toA(config2.index));
 	const datas = toA(config1.datas).concat(toA(config2.datas));
 	const include = config2.include || config1.include;
+	const engines = toA(config1.engines).concat(toA(config2.engines));
 	const layouts = toA(config1.layouts).concat(toA(config2.layouts));
 	const statics = toA(config1.statics).concat(toA(config2.statics));
 	const dynamics = toA(config1.dynamics).concat(toA(config2.dynamics));
 	const ignores = toA(config1.ignores).concat(toA(config2.ignores));
 	const dry_run = config2.dry_run || config1.dry_run;
 	const deploy = toA(config1.deploy).concat(toA(config2.deploy));
-	const config: Config = { src, dest, baseurl, index, datas, include, layouts, statics, dynamics, ignores, dry_run, deploy };
+	const config: Config = { src, dest, baseurl, index, datas, include, engines, layouts, statics, dynamics, ignores, dry_run, deploy };
 	return config;
 }

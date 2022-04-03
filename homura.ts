@@ -1,13 +1,9 @@
 
 import { version } from "./version.ts";
 import { Config } from "./core/config.ts";
-import { Runtime, Engines, Cache, loadConfig, loadSite } from "./core/site.ts";
+import { Runtime, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
 import { startServer } from "./core/server.ts";
-import * as MarkdownEngine from "./plugin/markdown.ts";
-// import * as MustacheEngine from "./plugin/mustache.ts";
-import * as NunjucksEngine from "./plugin/nunjucks.ts";
-import * as RelativeUrlEngine from "./plugin/relurl.ts";
 
 import * as Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts"
 
@@ -36,6 +32,9 @@ const defaultConfig: Config = {
 		"_data.json",
 	],
 	include: "_includes",
+	engines: [
+		{ name: "t", url: "./nunjucks.ts#convert" },
+	],
 	layouts: [
 		// { name: "default", filepath: "_layout/default.n.html", engine: "t,relurl" },
 	],
@@ -63,6 +62,7 @@ const emptyConfig: Config = {
 	index: undefined,
 	datas: undefined,
 	include: undefined,
+	engines: undefined,
 	layouts: undefined,
 	statics: undefined,
 	dynamics: undefined,
@@ -228,13 +228,8 @@ async function main(args: string[]) {
 
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
-	const engines: Engines = {};
-	engines["md"] = MarkdownEngine.convert;
-	engines["njk"] = NunjucksEngine.convert;
-	engines["t"] = NunjucksEngine.convert;
-	engines["relurl"] = RelativeUrlEngine.convert;
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
-	const rt: Runtime = { configFiles, configDefault, configOption, serverUrl, serverAddress, engines, cache };
+	const rt: Runtime = { configFiles, configDefault, configOption, serverUrl, serverAddress, cache };
 
 	const command = options._[0];
 	if (!command) {

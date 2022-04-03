@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+- add engine config.
+
 ## [0.2.0] - 2022-04-03
 
 - fix command line interface.

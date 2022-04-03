@@ -1,6 +1,7 @@
 
 import { TLValue } from "./value.ts";
 import { Runtime, Site, DestFile, DestFiles, loadSrcFile } from "./site.ts";
+import { importModule } from "../plugin/lib.ts";
 
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import * as FS from "https://deno.land/std@0.132.0/fs/mod.ts";
@@ -22,14 +23,23 @@ async function FSIsEmptyDirectory(path: string) {
 }
 
 async function convertText(text: string, engine: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
-	const engines = rt.engines;
+	const config = site.config;
+	const engines1 = config.engines!;
+	const engines: { [name: string]: string } = {};
+	for (const engine of engines1) {
+		const { name, url } = engine;
+		engines[name] = url;
+	}
 	for (const name of engine.split(",")) {
 		if (name === "") {
 			continue;
 		}
-		const engine = engines[name];
-		if (engine) {
-			text = await engine(text, values, destFile, site, rt);
+		const url = engines[name];
+		if (url) {
+			let m;
+			const [href, fn] = (m = url.match(/^([^#]*)#(.*)$/)) ? [m[1], m[2]] : [url, "default"];
+			const convert = await importModule(href, fn);
+			text = await convert(text, values, destFile, site, rt);
 		}
 	}
 	return text;

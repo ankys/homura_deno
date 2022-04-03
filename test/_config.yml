@@ -1,3 +1,12 @@
+engines:
+  - name: t
+    url: ./nunjucks.ts#convert
+  - name: njk
+    url: ./nunjucks.ts#convert
+  - name: md
+    url: ./markdown.ts#convert
+  - name: relurl
+    url: ./relurl.ts#convert
 layouts:
   - name: default
     filepath: _layout/default.n.html

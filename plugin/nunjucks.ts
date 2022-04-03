@@ -1,15 +1,13 @@
 
-const urlModuleNunjucks = "https://deno.land/x/nunjucks@3.2.3/mod.js";
+import Nunjucks from "https://deno.land/x/nunjucks@3.2.3/mod.js";
+import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
 import { getPathname } from "../core/pathname.ts";
 import { TLValue } from "../core/value.ts";
 import { Runtime, Site, DestFile, getSrcValueSync } from "../core/site.ts";
 import { FSGetMtime } from "../core/build.ts";
 
-import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
-
 export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
-	const Nunjucks = (await import(urlModuleNunjucks)).default;
 	const { config, valuesData, layoutCaches, srcFiles, destFiles } = site;
 	const filepathInclude = config.include!;
 	const indexFiles = config.index!;
@@ -80,5 +78,14 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 			context[key] = value2;
 		}
 	}
-	return nunjucks.renderString(text, context);
+	return new Promise((resolve, reject) => {
+		try {
+			nunjucks.renderString(text, context, (e: any, text2: string) => {
+				resolve(text2);
+			});
+		} catch (e) {
+			console.error(e);
+			reject(e);
+		}
+	});
 }
