@@ -4,9 +4,9 @@
 ## [Unreleased]
 
 - fix command line interface.
-- add suburi support.
+- add suburi support for server mode.
 
-## [0.1.0] - 2022-04-03
+## [0.1.0] - 2022-04-02
 
 - initial release (build, server, info, list, output, md, njk, relurl).
 
