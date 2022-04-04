@@ -5,7 +5,7 @@ import { Runtime, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
 import { startServer } from "./core/server.ts";
 
-import * as Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts"
+import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
 
 const defaultConfigFiles: string[] = [
 	// "_config.ts",
@@ -193,7 +193,8 @@ function getStringArray(value: unknown) {
 	return [];
 }
 async function main(args: string[]) {
-	const yargs = Yargs.default(args).scriptName("homura").version(version);
+	const yargs = Yargs(args);
+	yargs.scriptName("homura").version(version);
 	yargs.command(["build", "b"], "build site");
 	yargs.command(["server", "s", "*"], "start server mode");
 	yargs.command(["info", "i"], "output configs");
@@ -201,8 +202,8 @@ async function main(args: string[]) {
 	yargs.command(["output <path>", "o"], "output a specific file");
 	yargs.option("ignore-config", { describe: "ignore default configs", type: "boolean" });
 	yargs.option("config", { alias: "c", describe: "load config file", type: "string" });
-	yargs.option("src", { alias: "s", describe: "source directory", type: "string" });
-	yargs.option("dest", { alias: "d", describe: "output directory", type: "string" });
+	yargs.option("src", { alias: "s", describe: "source directory", type: "string", default: "." });
+	yargs.option("dest", { alias: "d", describe: "output directory", type: "string", default: "_site" });
 	yargs.option("data", { describe: "custom data file", type: "string" });
 	yargs.option("include", { describe: "custom file directory", type: "string" });
 	yargs.option("dry-run", { alias: "n", describe: "run with no file writing", type: "boolean" });
@@ -212,7 +213,7 @@ async function main(args: string[]) {
 	// console.log(options);
 
 	let configEmpty = false;
-	let configs = [];
+	let configs: string[] = [];
 	let configOption: Config = {
 	};
 	configEmpty = !!options["ignore-config"];
