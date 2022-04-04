@@ -3,7 +3,7 @@
 
 **Homura** is the Japanese word for *fire* but also a (yet another) general-purpose static site generator, highly inspired by [Jekyll](https://jekyllrb.com/) and [Lume](https://lume.land/).
 
-[![deno.land/x/homura_deno](https://shield.deno.dev/x/homura_deno)](https://deno.land/x/homura_deno/)
+[![deno.land/x/homura_deno](https://shield.deno.dev/x/homura_deno/)](https://deno.land/x/homura_deno/)
 
 ## Features
 
