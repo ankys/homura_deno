@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 - add engine config.
+- add date filters.
 
 ## [0.2.0] - 2022-04-03
 

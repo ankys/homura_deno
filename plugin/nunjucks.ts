@@ -47,10 +47,38 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	nunjucks.addFilter("url", (url: string, base: URL | string) => {
 		return new URL(url, base);
 	});
-	nunjucks.addFilter("date", (date: Date, format?: string) => {
-		// TODO
-		return date.toISOString();
+	// date
+	nunjucks.addGlobal("now", () => {
+		return new Date();
 	});
+	nunjucks.addFilter("date", (date: Date | string) => {
+		return new Date(date);
+	});
+	nunjucks.addFilter("iso_date", (date: Date | string) => {
+		return new Date(date).toISOString();
+	});
+	nunjucks.addFilter("utc_date", (date: Date | string) => {
+		return new Date(date).toUTCString();
+	});
+	nunjucks.addFilter("local_date", (date: Date | string, type?: string) => {
+		if (type === "date") {
+			return new Date(date).toDateString();
+		} else if (type === "time") {
+			return new Date(date).toTimeString();
+		} else {
+			return new Date(date).toString();
+		}
+	});
+	nunjucks.addFilter("locale_date", (date: Date | string, locales?: string, type?: string, options?: Object) => {
+		if (type === "date") {
+			return new Date(date).toLocaleDateString(locales, options);
+		} else if (type === "time") {
+			return new Date(date).toLocaleTimeString(locales, options);
+		} else {
+			return new Date(date).toLocaleString(locales, options);
+		}
+	});
+	// path
 	nunjucks.addFilter("pathname", (path: string) => {
 		return getPathname(path, indexFiles);
 	});

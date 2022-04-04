@@ -21,7 +21,9 @@
 <hr />
 
 <article>
+<pre>
 {{ content }}
+</pre>
 {{ content | safe }}
 </article>
 
@@ -31,7 +33,7 @@
 <div><code>{{ path }}</code></div>
 <div><code>{{ path | pathname }}</code></div>
 <div><code>{{ ("." + path | pathname) | url("http://localhost/a/") }}</code></div>
-<div>Last modified: <code>{{ mtime | date }}</code>.</div>
+<div>Last modified: <code>{{ mtime }}</code>.</div>
 </footer>
 </div>
 </body>
