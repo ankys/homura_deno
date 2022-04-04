@@ -3,8 +3,7 @@ import Nunjucks from "https://deno.land/x/nunjucks@3.2.3/mod.js";
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
 import { getPathname } from "../core/pathname.ts";
-import { TLValue } from "../core/value.ts";
-import { Runtime, Site, DestFile, getSrcValueSync } from "../core/site.ts";
+import { Runtime, Site, DestFile, TLValue, getSrcValueSync } from "../core/site.ts";
 import { FSGetMtime } from "../core/build.ts";
 
 export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {

@@ -1,11 +1,11 @@
 
+import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
+
 import { version } from "./version.ts";
 import { Config } from "./core/config.ts";
 import { Runtime, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
 import { startServer } from "./core/server.ts";
-
-import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
 
 const defaultConfigFiles: string[] = [
 	// "_config.ts",

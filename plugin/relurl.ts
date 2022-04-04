@@ -2,8 +2,7 @@
 import * as DOM from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts";
 import * as PathPosix from "https://deno.land/std@0.132.0/path/posix.ts";
 
-import { TLValue } from "../core/value.ts";
-import { Runtime, Site, DestFile } from "../core/site.ts";
+import { Runtime, Site, DestFile, TLValue } from "../core/site.ts";
 
 export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const pathBase = destFile.path;

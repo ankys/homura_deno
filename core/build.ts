@@ -1,10 +1,9 @@
 
-import { TLValue } from "./value.ts";
-import { Runtime, Site, DestFile, DestFiles, loadSrcFile } from "./site.ts";
-import { importModule } from "../plugin/lib.ts";
-
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import * as FS from "https://deno.land/std@0.132.0/fs/mod.ts";
+
+import { Runtime, Site, DestFile, TLValue, DestFiles, loadSrcFile } from "./site.ts";
+import { importModule } from "../plugin/lib.ts";
 
 export async function FSGetMtime(filepath: string): Promise<Date> {
 	try {

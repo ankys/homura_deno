@@ -1,9 +1,10 @@
 
+import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
+
 import { TLValue, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
 import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
-import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
-
+export type { TLValue } from "./value.ts";
 export type Convert = (text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },

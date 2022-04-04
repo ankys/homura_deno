@@ -1,9 +1,9 @@
 
+import * as HTTPServer from "https://deno.land/std@0.132.0/http/server.ts";
+
 import { Runtime, loadSite, normalizePath } from "./site.ts";
 import { resolvePathname } from "./pathname.ts";
 import { getOutput } from "./build.ts";
-
-import * as HTTPServer from "https://deno.land/std@0.132.0/http/server.ts";
 
 export async function startServer(rt: Runtime) {
 	const serverUrl = rt.serverUrl;
