@@ -112,7 +112,7 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		const matcher: Matcher | null = pattern ? newMatcher(pattern) : null;
 		const paths: string[] = [];
 		for (const [path, destFile] of Object.entries(site.destFiles)) {
-			if (matcher && testMatcher(matcher, path)) {
+			if (!matcher || testMatcher(matcher, path)) {
 				paths.push(path);
 			}
 		}
@@ -122,8 +122,10 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		const matcher: Matcher | null = pattern ? newMatcher(pattern) : null;
 		const paths: string[] = [];
 		for (const [path, destFile] of Object.entries(site.destFiles)) {
-			if (destFile.dynamicInfo && matcher && testMatcher(matcher, path)) {
-				paths.push(path);
+			if (destFile.dynamicInfo) {
+				if (!matcher || testMatcher(matcher, path)) {
+					paths.push(path);
+				}
 			}
 		}
 		return paths;

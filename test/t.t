@@ -1,6 +1,6 @@
 
 path: {{ path }}
-size: {{ info.size }}
+size: {{ info.fsize }}
 mtime: {{ info.mtime }}
 
 files: {{ files() }}
