@@ -4,8 +4,31 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
 import { getPathname } from "../core/pathname.ts";
 import { Runtime, Site, DestFile, TLValue, getSrcValueSync } from "../core/site.ts";
-import { FSGetMtime } from "../core/build.ts";
 
+function toA<T1, T2>(fn: (...args: any[]) => T2) {
+	return (...args: any[]) => {
+		const arg = args[0];
+		if (!arg) {
+			return null;
+		} else if (Array.isArray(arg)) {
+			let list = [];
+			for (const a of arg) {
+				args[0] = a;
+				list.push(fn.apply(null, args));
+			}
+			return list;
+		} else {
+			return fn.apply(null, args);
+		}
+	};
+}
+type Info = { size: Number, mtime: Date };
+function getInfo(filepath: string): Info {
+	const info = Deno.statSync(filepath);
+	const fsize = info.size;
+	const mtime = info.mtime!;
+	return { fsize, mtime };
+}
 export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const { config, valuesData, layoutCaches, srcFiles, destFiles } = site;
 	const filepathInclude = config.include!;
@@ -51,16 +74,16 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	nunjucks.addGlobal("now", () => {
 		return new Date();
 	});
-	nunjucks.addFilter("date", (date: Date | string) => {
+	nunjucks.addFilter("date", toA((date: Date | string) => {
 		return new Date(date);
-	});
-	nunjucks.addFilter("iso_date", (date: Date | string) => {
+	}));
+	nunjucks.addFilter("iso_date", toA((date: Date | string) => {
 		return new Date(date).toISOString();
-	});
-	nunjucks.addFilter("utc_date", (date: Date | string) => {
+	}));
+	nunjucks.addFilter("utc_date", toA((date: Date | string) => {
 		return new Date(date).toUTCString();
-	});
-	nunjucks.addFilter("local_date", (date: Date | string, type?: string) => {
+	}));
+	nunjucks.addFilter("local_date", toA((date: Date | string, type?: string) => {
 		if (type === "date") {
 			return new Date(date).toDateString();
 		} else if (type === "time") {
@@ -68,8 +91,8 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		} else {
 			return new Date(date).toString();
 		}
-	});
-	nunjucks.addFilter("locale_date", (date: Date | string, locales?: string, type?: string, options?: Object) => {
+	}));
+	nunjucks.addFilter("locale_date", toA((date: Date | string, locales?: string, type?: string, options?: Object) => {
 		if (type === "date") {
 			return new Date(date).toLocaleDateString(locales, options);
 		} else if (type === "time") {
@@ -77,25 +100,48 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		} else {
 			return new Date(date).toLocaleString(locales, options);
 		}
-	});
-	// path
-	nunjucks.addFilter("pathname", (path: string) => {
-		return getPathname(path, indexFiles);
-	});
+	}));
+	// path, info, value
 	nunjucks.addGlobal("path", destFile.path);
-	const filepathSrc = destFile.srcFile.filepath;
-	const mtime = await FSGetMtime(filepathSrc);
-	nunjucks.addGlobal("mtime", mtime);
-	nunjucks.addGlobal("pages", () => {
-		const pages: [string, TLValue][] = [];
+	const info = getInfo(destFile.srcFile.filepath);
+	nunjucks.addGlobal("info", info);
+	nunjucks.addGlobal("fsize", info.fsize);
+	nunjucks.addGlobal("mtime", info.mtime);
+	nunjucks.addGlobal("files", () => {
+		const paths: string[] = [];
 		for (const [path, destFile] of Object.entries(site.destFiles)) {
-			const value = getSrcValueSync(destFile, rt.cache);
-			if (value) {
-				pages.push([path, value]);
+			paths.push(path);
+		}
+		return paths;
+	});
+	nunjucks.addGlobal("pages", () => {
+		const paths: string[] = [];
+		for (const [path, destFile] of Object.entries(site.destFiles)) {
+			if (destFile.dynamicInfo) {
+				paths.push(path);
 			}
 		}
-		return pages;
+		return paths;
 	});
+	nunjucks.addFilter("info", toA((path: string) => {
+		const destFile = site.destFiles[path];
+		const info = getInfo(destFile.srcFile.filepath);
+		return info;
+	}));
+	nunjucks.addFilter("fsize", toA((info: Info) => {
+		return info.fsize;
+	}));
+	nunjucks.addFilter("mtime", toA((info: Info) => {
+		return info.mtime;
+	}));
+	nunjucks.addFilter("value", toA((path: string) => {
+		const destFile = site.destFiles[path];
+		const value = getSrcValueSync(destFile, rt.cache);
+		return value;
+	}));
+	nunjucks.addFilter("pathname", toA((path: string) => {
+		return getPathname(path, indexFiles);
+	}));
 	let context: { [key: string]: Object } = {};
 	for (const value of valuesData.concat(values)) {
 		if (!value) {

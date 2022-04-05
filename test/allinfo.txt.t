@@ -3,7 +3,8 @@ parent: "?"
 ---
 
 pages:
-  {%- for path, page in pages() %}
+  {%- for path in pages() %}
+  {%- set page = path | value %}
   - path: "{{ path }}"
     parent: "{{ page.parent | default("") }}"
     title: "{{ page.title | default("") }}"
