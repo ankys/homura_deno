@@ -6,6 +6,7 @@
 - add engine config.
 - add date filters.
 - add and change filters on path, info, value
+- add glob support for files, pages
 
 ## [0.2.0] - 2022-04-03
 

@@ -1,6 +1,7 @@
 
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
+import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
 import { TLValue, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
 import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
@@ -138,27 +139,12 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 export function normalizePath(path: string): string {
 	return path.replace(/(^|\/)\/*/g, "/");
 }
-type Matcher = RegExp;
-function newMatcher(pattern: string): RegExp {
-	if (pattern.match(/^\^.*\$$/)) {
-		return new RegExp(pattern);
-	} else {
-		// glob
-		return Path.globToRegExp(pattern);
-	}
-}
-function replaceMatcher(str: string, matcher: RegExp, replace: string): (string | null) {
-	if (str.match(matcher)) {
-		return str.replace(matcher, replace);
-	}
-	return null;
-}
-function replacePath(path: string, matcher: RegExp, replace: string): (string | null) {
+function replacePath(path: string, matcher: Matcher, replace: string): (string | null) {
 	let m;
 	if (m = path.match(/^(.*)(\.[^\/\.]*)$/)) {
 		const [base, ext] = [m[1], m[2]];
-		const ext2 = replaceMatcher(ext, matcher, replace);
-		if (ext2 !== null) {
+		if (testMatcher(matcher, ext)) {
+			const ext2 = replaceMatcher(matcher, ext, replace);
 			const path2 = base + ext2;
 			return path2;
 		}
@@ -166,22 +152,22 @@ function replacePath(path: string, matcher: RegExp, replace: string): (string | 
 	if (m = path.match(/^(.*?)(\.[^\/]*)$/)) {
 		// long ext
 		const [base, ext] = [m[1], m[2]];
-		const ext2 = replaceMatcher(ext, matcher, replace);
-		if (ext2 !== null) {
+		if (testMatcher(matcher, ext)) {
+			const ext2 = replaceMatcher(matcher, ext, replace);
 			const path2 = base + ext2;
 			return path2;
 		}
 	}
 	if (m = path.match(/^(.*?\/)([^\/]*)$/)) {
 		const [base, name] = [m[1], m[2]];
-		const name2 = replaceMatcher(name, matcher, replace);
-		if (name2 !== null) {
+		if (testMatcher(matcher, name)) {
+			const name2 = replaceMatcher(matcher, name, replace);
 			const path2 = base + name2;
 			return path2;
 		}
 	}
-	const path2 = replaceMatcher(path, matcher, replace);
-	if (path2 !== null) {
+	if (testMatcher(matcher, path)) {
+		const path2 = replaceMatcher(matcher, path, replace);
 		return path2;
 	}
 	return null;

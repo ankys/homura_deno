@@ -3,6 +3,7 @@ import Nunjucks from "https://deno.land/x/nunjucks@3.2.3/mod.js";
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
 import { getPathname } from "../core/pathname.ts";
+import { Matcher, newMatcher, testMatcher } from "../core/matcher.ts";
 import { Runtime, Site, DestFile, TLValue, getSrcValueSync } from "../core/site.ts";
 
 function toA<T1, T2>(fn: (...args: any[]) => T2) {
@@ -22,7 +23,7 @@ function toA<T1, T2>(fn: (...args: any[]) => T2) {
 		}
 	};
 }
-type Info = { size: Number, mtime: Date };
+type Info = { fsize: Number, mtime: Date };
 function getInfo(filepath: string): Info {
 	const info = Deno.statSync(filepath);
 	const fsize = info.size;
@@ -107,17 +108,21 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	nunjucks.addGlobal("info", info);
 	nunjucks.addGlobal("fsize", info.fsize);
 	nunjucks.addGlobal("mtime", info.mtime);
-	nunjucks.addGlobal("files", () => {
+	nunjucks.addGlobal("files", (pattern?: string) => {
+		const matcher: Matcher | null = pattern ? newMatcher(pattern) : null;
 		const paths: string[] = [];
 		for (const [path, destFile] of Object.entries(site.destFiles)) {
-			paths.push(path);
+			if (matcher && testMatcher(matcher, path)) {
+				paths.push(path);
+			}
 		}
 		return paths;
 	});
-	nunjucks.addGlobal("pages", () => {
+	nunjucks.addGlobal("pages", (pattern?: string) => {
+		const matcher: Matcher | null = pattern ? newMatcher(pattern) : null;
 		const paths: string[] = [];
 		for (const [path, destFile] of Object.entries(site.destFiles)) {
-			if (destFile.dynamicInfo) {
+			if (destFile.dynamicInfo && matcher && testMatcher(matcher, path)) {
 				paths.push(path);
 			}
 		}
