@@ -20,5 +20,5 @@ Deno.test("config", async () => {
 Deno.test("list", async () => {
 	const list = await main(["list"]) as string;
 	const c = await Deno.readTextFile("_correct/list.txt");
-	Asserts.assertEquals(splitLines(list), splitLines(c));
+	Asserts.assertEquals(splitLines(list).sort(), splitLines(c).sort());
 });
