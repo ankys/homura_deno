@@ -68,7 +68,6 @@ const emptyConfig: Config = {
 async function mainBuild(rt: Runtime) {
 	const site = await loadSite(rt);
 	await buildDest(site, rt);
-	return 0;
 }
 async function mainDeploy(rt: Runtime) {
 	// const config = await loadConfig(rt);
@@ -83,20 +82,14 @@ async function mainDeploy(rt: Runtime) {
 }
 async function mainServer(rt: Runtime) {
 	await startServer(rt);
-	return 0;
 }
 async function mainInfo(rt: Runtime) {
 	const config = await loadConfig(rt);
-	console.log(config);
-	return 0;
+	return config;
 }
 async function mainList(rt: Runtime) {
 	const site = await loadSite(rt);
-	// console.log(site);
-	for (const path of Object.keys(site.destFiles)) {
-		console.log(path);
-	}
-	return 0;
+	return Object.keys(site.destFiles);
 }
 async function mainOutput(rt: Runtime, path: string) {
 	const site = await loadSite(rt);
@@ -104,11 +97,10 @@ async function mainOutput(rt: Runtime, path: string) {
 	const destFile = destFiles[path];
 	if (!destFile) {
 		console.error("⚠️", path);
-		return 1;
+		throw "no path";
 	}
 	const text = await getOutput(destFile, path, site, rt);
-	console.log(text);
-	return 0;
+	return text;
 }
 
 // async function mainNew(path: string, rt: Runtime) {
@@ -186,7 +178,7 @@ function getStringArray(value: unknown) {
 	}
 	return [];
 }
-async function main(args: string[]) {
+export async function main(args: string[]) {
 	const yargs = Yargs(args);
 	yargs.scriptName("homura").version(version);
 	yargs.command(["build", "b"], "build site");
@@ -250,11 +242,17 @@ async function main(args: string[]) {
 	// 	return await mainEdit(path, rt);
 	} else {
 		console.error("⚠️", command);
-		return 1;
+		throw "no command";
 	}
 }
 
 if (import.meta.main) {
-	const code = await main(Deno.args);
-	Deno.exit(code);
+	try {
+		const ret = await main(Deno.args);
+		if (ret) {
+			console.log(ret);
+		}
+	} catch (e) {
+		Deno.exit(1);
+	}
 }
