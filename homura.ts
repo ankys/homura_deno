@@ -85,11 +85,13 @@ async function mainServer(rt: Runtime) {
 }
 async function mainInfo(rt: Runtime) {
 	const config = await loadConfig(rt);
+	// return JSON.stringify(config, null, 2);
 	return config;
 }
 async function mainList(rt: Runtime) {
 	const site = await loadSite(rt);
-	return Object.keys(site.destFiles);
+	const paths = Object.keys(site.destFiles);
+	return paths.join("\n");
 }
 async function mainOutput(rt: Runtime, path: string) {
 	const site = await loadSite(rt);

@@ -1,0 +1,81 @@
+{
+  "src": ".",
+  "dest": "_site",
+  "index": [
+    "index.html",
+    "index.htm"
+  ],
+  "datas": [
+    "_data.yml",
+    "_data.yaml",
+    "_data.toml",
+    "_data.json"
+  ],
+  "include": "_includes",
+  "layout": "_layouts",
+  "engines": [
+    {
+      "name": "t",
+      "url": "./nunjucks.ts#convert"
+    },
+    {
+      "name": "t",
+      "url": "./nunjucks.ts#convert"
+    },
+    {
+      "name": "njk",
+      "url": "./nunjucks.ts#convert"
+    },
+    {
+      "name": "md",
+      "url": "./markdown.ts#convert"
+    },
+    {
+      "name": "relurl",
+      "url": "./relurl.ts#convert"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "default",
+      "file": "default.n.html",
+      "engine": "t,relurl"
+    }
+  ],
+  "statics": [],
+  "dynamics": [
+    {
+      "pattern": ".t",
+      "replace": "",
+      "engine": "t",
+      "layout": ""
+    },
+    {
+      "pattern": ".t",
+      "replace": "",
+      "engine": "t",
+      "layout": ""
+    },
+    {
+      "pattern": ".njk",
+      "replace": "",
+      "engine": "njk",
+      "layout": ""
+    },
+    {
+      "pattern": ".n.html",
+      "replace": ".html",
+      "engine": "t",
+      "layout": "default"
+    },
+    {
+      "pattern": ".n.md",
+      "replace": ".html",
+      "engine": "t,md",
+      "layout": "default"
+    }
+  ],
+  "ignores": [
+    "_*"
+  ]
+}
