@@ -2,7 +2,7 @@
 import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
 
 import { version } from "./version.ts";
-import { Config } from "./core/config.ts";
+import { Options, Config } from "./core/config.ts";
 import { Runtime, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
 import { startServer } from "./core/server.ts";
@@ -18,7 +18,6 @@ const defaultConfigFiles: string[] = [
 const defaultConfig: Config = {
 	src: ".",
 	dest: "_site",
-	baseurl: "http://localhost:3000/",
 	index: [
 		"index.html",
 		"index.htm",
@@ -48,17 +47,12 @@ const defaultConfig: Config = {
 	ignores: [
 		// "_*",
 	],
-	dry_run: false,
-	deploy: [
-		"_deploy.sh",
-	],
 };
 const emptyConfigFiles: string[] = [
 ];
 const emptyConfig: Config = {
 	src: undefined,
 	dest: undefined,
-	baseurl: undefined,
 	index: undefined,
 	datas: undefined,
 	include: undefined,
@@ -67,8 +61,6 @@ const emptyConfig: Config = {
 	statics: undefined,
 	dynamics: undefined,
 	ignores: undefined,
-	dry_run: undefined,
-	deploy: undefined,
 };
 
 async function mainBuild(rt: Runtime) {
@@ -212,25 +204,25 @@ async function main(args: string[]) {
 	const options = yargs.parse();
 	// console.log(options);
 
-	let configEmpty = false;
-	let configs: string[] = [];
+	let configEmpty = !!options["ignore-config"];
+	let configs: string[] = getStringArray(options["config"]);
 	let configOption: Config = {
+		src: options["src"],
+		dest: options["dest"],
+		datas: getStringArray(options["data"]),
+		include: options["include"],
 	};
-	configEmpty = !!options["ignore-config"];
-	configs = getStringArray(options["config"]);
-	configOption.src = options["src"];
-	configOption.dest = options["dest"];
-	configOption.datas = getStringArray(options["data"]);
-	configOption.include = options["include"];
-	configOption.dry_run = !!options["dry-run"];
+	const dry_run = !!options["dry-run"];
 	const serverUrl = new URL(options["server"]);
 	const serverAddress = options["listen"];
+	const options2: Options = { dry_run, serverUrl, serverAddress };
+	// console.log(options2);
 	// console.log(configs);
 
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
-	const rt: Runtime = { configFiles, configDefault, configOption, serverUrl, serverAddress, cache };
+	const rt: Runtime = { configFiles, configDefault, configOption, options: options2, cache };
 
 	const command = options._[0];
 	if (!command) {

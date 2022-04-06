@@ -91,7 +91,7 @@ export async function buildDest(site: Site, rt: Runtime) {
 	const config = site.config;
 	const destFiles = site.destFiles;
 	const destDir = config.dest!;
-	const modeDryRun = config.dry_run!;
+	const modeDryRun = rt.options.dry_run!;
 
 	async function sub(filepathDir: string, pathDir: string) {
 		for await (const entry of Deno.readDir(filepathDir)) {

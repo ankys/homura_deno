@@ -41,5 +41,3 @@ ignores:
 #   - "*~"
 #   - "*.stackdump"
 #   - "*.bak"
-# dry_run: true
-# deploy: "echo aaa"

@@ -6,8 +6,8 @@ import { resolvePathname } from "./pathname.ts";
 import { getOutput } from "./build.ts";
 
 export async function startServer(rt: Runtime) {
-	const serverUrl = rt.serverUrl;
-	const hostname = rt.serverAddress;
+	const serverUrl = rt.options.serverUrl;
+	const hostname = rt.options.serverAddress;
 	const port = Number(serverUrl.port || 8000);
 	const pathnameRoot = serverUrl.pathname;
 	async function sub(req: Request) {

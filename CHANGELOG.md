@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+- delete dry_run config (use dry_run option).
+
 ## [0.3.1] - 2022-04-05
 
 - fix glob support for files, pages.
