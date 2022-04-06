@@ -13,7 +13,7 @@ export type Options = {
 }
 
 export type Engine = { name: string, url: string };
-export type Layout = { name: string, filepath: string, engine: string };
+export type Layout = { name: string, file: string, engine: string };
 export type Static = { pattern: string, replace: string };
 export type Dynamic = { pattern: string, replace: string, engine: string, layout: string };
 export type Config = {
@@ -22,6 +22,7 @@ export type Config = {
 	index?: string[];
 	datas?: string[];
 	include?: string;
+	layout?: string;
 	engines?: Engine[];
 	layouts?: Layout[];
 	statics?: Static[];
@@ -34,11 +35,12 @@ export function mergeConfig(config1: Config, config2: Config): Config {
 	const index = toA(config1.index).concat(toA(config2.index));
 	const datas = toA(config1.datas).concat(toA(config2.datas));
 	const include = config2.include || config1.include;
+	const layout = config2.layout || config1.layout;
 	const engines = toA(config1.engines).concat(toA(config2.engines));
 	const layouts = toA(config1.layouts).concat(toA(config2.layouts));
 	const statics = toA(config1.statics).concat(toA(config2.statics));
 	const dynamics = toA(config1.dynamics).concat(toA(config2.dynamics));
 	const ignores = toA(config1.ignores).concat(toA(config2.ignores));
-	const config: Config = { src, dest, index, datas, include, engines, layouts, statics, dynamics, ignores };
+	const config: Config = { src, dest, index, datas, include, layout, engines, layouts, statics, dynamics, ignores };
 	return config;
 }

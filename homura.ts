@@ -31,6 +31,7 @@ const defaultConfig: Config = {
 		"_data.json",
 	],
 	include: "_includes",
+	layout: "_layouts",
 	engines: [
 		{ name: "t", url: "./nunjucks.ts#convert" },
 	],
@@ -56,6 +57,7 @@ const emptyConfig: Config = {
 	index: undefined,
 	datas: undefined,
 	include: undefined,
+	layout: undefined,
 	engines: undefined,
 	layouts: undefined,
 	statics: undefined,

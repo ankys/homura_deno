@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 - delete dry_run config (use dry_run option).
+- change layout config.
 
 ## [0.3.1] - 2022-04-05
 

@@ -9,7 +9,7 @@ engines:
     url: ./relurl.ts#convert
 layouts:
   - name: default
-    filepath: _layout/default.n.html
+    file: default.n.html
     engine: t,relurl
 dynamics:
   - pattern: .t

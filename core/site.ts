@@ -56,10 +56,12 @@ export async function loadDataFiles(config: Config, cache: Cache) {
 type LayoutCache = { name: string, filepath: string, engine: string, value: TLValue | null, text: string };
 type LayoutCaches = { [name: string]: LayoutCache };
 export async function checkLayouts(config: Config, cache: Cache): Promise<LayoutCaches> {
-	const layouts = config.layouts as Layout[];
-	let layouts2 = {} as LayoutCaches;
+	const filepathLayout = config.layout!;
+	const layouts = config.layouts!;
+	let layouts2: LayoutCaches = {};
 	for (const layout of layouts) {
-		const { name, filepath, engine } = layout;
+		const { name, file, engine } = layout;
+		const filepath = Path.join(filepathLayout, file);
 		const c = cache.cacheLayout[filepath];
 		const o = await loadFrontMatterFile(filepath, c);
 		if (o) {
@@ -90,10 +92,7 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 		excludes.push(filepath);
 	}
 	excludes.push(config.include!);
-	for (const layout of config.layouts!) {
-		const filepath = layout.filepath;
-		excludes.push(filepath);
-	}
+	excludes.push(config.layout!);
 	// console.log(excludes);
 	let ignores: RegExp[] = [];
 	for (const ignore of config.ignores!) {
