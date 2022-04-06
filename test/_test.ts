@@ -1,7 +1,7 @@
 
 import * as Asserts from "https://deno.land/std@0.133.0/testing/asserts.ts";
 
-import { main } from "./homura.ts";
+import { main } from "../homura.ts";
 
 function splitLines(text: string): string[] {
 	let lines = text.split(/\x0D\x0A|\x0D|\x0A/g);
