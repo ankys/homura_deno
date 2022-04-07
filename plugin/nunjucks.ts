@@ -2,6 +2,7 @@
 import Nunjucks from "https://deno.land/x/nunjucks@3.2.3/mod.js";
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
+import { relativePath } from "../core/path.ts";
 import { getPathname } from "../core/pathname.ts";
 import { Matcher, newMatcher, testMatcher } from "../core/matcher.ts";
 import { Runtime, Site, DestFile, TLValue, getSrcValueSync } from "../core/site.ts";
@@ -67,9 +68,6 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 				return info.src;
 			}
 		}
-	});
-	nunjucks.addFilter("url", (url: string, base: URL | string) => {
-		return new URL(url, base);
 	});
 	// date
 	nunjucks.addGlobal("now", () => {
@@ -146,9 +144,17 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		const value = getSrcValueSync(destFile, rt.cache);
 		return value;
 	}));
+	// path
+	nunjucks.addFilter("relative", toA((path: string, base?: string) => {
+		base ||= destFile.path;
+		return relativePath(base, path);
+	}));
 	nunjucks.addFilter("pathname", toA((path: string) => {
 		return getPathname(path, indexFiles);
 	}));
+	nunjucks.addFilter("url", (url: string, base: URL | string) => {
+		return new URL(url, base);
+	});
 	let context: { [key: string]: Object } = {};
 	for (const value of valuesData.concat(values)) {
 		if (!value) {

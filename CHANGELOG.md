@@ -6,6 +6,7 @@
 - delete dry_run config (use dry_run option).
 - change layout config.
 - add usage in help.
+- add relative path filter.
 
 ## [0.3.1] - 2022-04-05
 

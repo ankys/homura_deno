@@ -12,3 +12,8 @@ files: {{ files("/*.txt") }}
 files: {{ files("^/.*.html$") }}
 files: {{ files("/a*") }}
 pages: {{ pages("/a*") }}
+
+path: {{ path }}
+relative: {{ "/index.html" | relative }}
+relative: {{ "/index.html" | relative | pathname }}
+relative: {{ "/index.html" | relative("/a/") | pathname }}

@@ -4,6 +4,7 @@ export function normalizePath(path: string): string {
 }
 
 export function relativePath(base: string, path: string): string {
+	// implicitly assumed base and path starts with "/"
 	const ns1 = base.split(/\/+/g);
 	const ns2 = path.split(/\/+/g);
 	ns1.pop();
@@ -14,7 +15,7 @@ export function relativePath(base: string, path: string): string {
 			break;
 		}
 	}
-	const ns = [];
+	let ns = [];
 	for (let i = c; i < ns1.length; i++) {
 		ns.push("..");
 	}
