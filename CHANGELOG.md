@@ -7,6 +7,7 @@
 - change layout config.
 - add usage in help.
 - add relative path filter.
+- adjust command line options.
 
 ## [0.3.1] - 2022-04-05
 

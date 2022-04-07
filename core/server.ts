@@ -6,11 +6,9 @@ import { Runtime, loadSite } from "./site.ts";
 import { resolvePathname } from "./pathname.ts";
 import { getOutput } from "./build.ts";
 
-export async function startServer(rt: Runtime) {
-	const serverUrl = rt.options.serverUrl;
-	const hostname = rt.options.serverAddress;
-	const port = Number(serverUrl.port || 8000);
-	const pathnameRoot = serverUrl.pathname;
+export async function startServer(rt: Runtime, url: URL, hostname: string) {
+	const port = Number(url.port || 8000);
+	const pathnameRoot = url.pathname;
 	async function sub(req: Request) {
 		const pathname = new URL(req.url).pathname;
 		try {
@@ -39,7 +37,7 @@ export async function startServer(rt: Runtime) {
 			return new Response(null, { status: 500 });
 		}
 	}
-	console.error("ℹ", serverUrl.href, "\x1b[2m", hostname, port, pathnameRoot, "\x1b[0m");
+	console.error("ℹ", url.href, "\x1b[2m", hostname, port, pathnameRoot, "\x1b[0m");
 	await HTTPServer.serve(sub, { hostname, port });
 	// const server = Deno.listen({ hostname, port });
 	// for await (const conn of server) {

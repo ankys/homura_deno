@@ -4,7 +4,7 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import { normalizePath } from "./path.ts";
 import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
 import { TLValue, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
-import { Options, Config, Layout, Dynamic, mergeConfig } from "./config.ts";
+import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
 export type { TLValue } from "./value.ts";
 export type Convert = (text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
@@ -14,7 +14,7 @@ export type Cache = {
 	cacheLayout: { [filepath: string]: [Deno.FileInfo, TLValue | null, string] },
 	cacheSrc: { [filepath: string]: [Deno.FileInfo, TLValue | null] },
 }
-export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, options: Options, cache: Cache };
+export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, cache: Cache };
 
 export async function loadConfigFiles(files: string[], config: Config, cache: Cache) {
 	for await (const file of files) {

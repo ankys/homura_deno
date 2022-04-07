@@ -6,12 +6,6 @@ function toA<T>(list?: T[]): T[] {
 	return list;
 }
 
-export type Options = {
-	dry_run: boolean;
-	serverUrl: URL;
-	serverAddress: string;
-}
-
 export type Engine = { name: string, url: string };
 export type Layout = { name: string, file: string, engine: string };
 export type Static = { pattern: string, replace: string };

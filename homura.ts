@@ -2,7 +2,7 @@
 import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
 
 import { version } from "./version.ts";
-import { Options, Config } from "./core/config.ts";
+import { Config } from "./core/config.ts";
 import { Runtime, Cache, loadConfig, loadSite } from "./core/site.ts";
 import { getOutput, buildDest } from "./core/build.ts";
 import { startServer } from "./core/server.ts";
@@ -65,9 +65,9 @@ const emptyConfig: Config = {
 	ignores: undefined,
 };
 
-async function mainBuild(rt: Runtime) {
+async function mainBuild(rt: Runtime, modeDryRun: boolean) {
 	const site = await loadSite(rt);
-	await buildDest(site, rt);
+	await buildDest(site, rt, modeDryRun);
 }
 async function mainDeploy(rt: Runtime) {
 	// const config = await loadConfig(rt);
@@ -80,8 +80,8 @@ async function mainDeploy(rt: Runtime) {
 	// }
 	// return status.code;
 }
-async function mainServer(rt: Runtime) {
-	await startServer(rt);
+async function mainServer(rt: Runtime, url: URL, hostname: string) {
+	await startServer(rt, url, hostname);
 }
 async function mainInfo(rt: Runtime) {
 	const config = await loadConfig(rt);
@@ -183,12 +183,7 @@ function getStringArray(value: unknown) {
 export async function main(args: string[]) {
 	let yargs = Yargs(args);
 	yargs.scriptName("homura").version(version);
-	yargs.usage("$0 [options] <command>");
-	yargs.command(["build", "b"], "Build site");
-	yargs.command(["server", "s", "*"], "Start server mode");
-	yargs.command(["info", "i"], "Output configs");
-	yargs.command(["list", "l"], "List path of files");
-	yargs.command(["output <path>", "o"], "Output a specific file");
+	yargs.usage("$0 [options] <command> [args]");
 	yargs.option("ignore-config", { describe: "Ignore default configs", type: "boolean" });
 	yargs.option("config", { alias: "c", describe: "Load config file", type: "string" });
 	yargs.option("src", { alias: "s", describe: "Source directory", type: "string", default: "." });
@@ -196,9 +191,21 @@ export async function main(args: string[]) {
 	yargs.option("data", { describe: "Custom data file", type: "string" });
 	yargs.option("include", { describe: "Custom file directory", type: "string", default: "_includes" });
 	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
-	yargs.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
-	yargs.option("server", { describe: "Url used in server mode", type: "string", default: "http://localhost:8000/" });
-	yargs.option("listen", { describe: "IP address used in server mode", type: "string", default: "0.0.0.0" });
+	yargs.command(["build", "b"], "Build site", (yargs2: any) => {
+		yargs2.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
+		return yargs2;
+	});
+	yargs.command(["server", "s", "*"], "Start server mode", (yargs2: any) => {
+		yargs2.option("server", { describe: "Custom server url", type: "string", default: "http://localhost:8000/" });
+		yargs2.option("listen", { describe: "IP address listened", type: "string", default: "0.0.0.0" });
+		return yargs2;
+	});
+	yargs.command(["info", "i"], "Output configs");
+	yargs.command(["list", "l"], "List path of files");
+	yargs.command(["output <path>", "o"], "Output a specific file", (yargs2: any) => {
+		yargs2.positional("path", { describe: "Path of output file", type: "string" });
+		return yargs2;
+	});
 	const options = yargs.parse();
 	// console.log(options);
 
@@ -211,27 +218,21 @@ export async function main(args: string[]) {
 		include: options["include"],
 		layout: options["layout"],
 	};
-	const dry_run = !!options["dry-run"];
-	const serverUrl = new URL(options["server"]);
-	const serverAddress = options["listen"];
-	const options2: Options = { dry_run, serverUrl, serverAddress };
-	// console.log(options2);
-	// console.log(configs);
-
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
-	const rt: Runtime = { configFiles, configDefault, configOption, options: options2, cache };
+	const rt: Runtime = { configFiles, configDefault, configOption, cache };
 
 	const command = options._[0];
-	if (!command) {
-		return await mainServer(rt);
-	} else if (command == "build" || command == "b") {
-		return await mainBuild(rt);
+	if (command == "build" || command == "b") {
+		const modeDryRun = !!options["dry-run"];
+		return await mainBuild(rt, modeDryRun);
 	// } else if (command == "deploy" || command == "d") {
 	// 	return await mainDeploy(rt);
-	} else if (command == "server" || command == "s") {
-		return await mainServer(rt);
+	} else if (command == "server" || command == "s" || !command) {
+		const serverUrl = new URL(options["server"]);
+		const serverAddress = options["listen"];
+		return await mainServer(rt, serverUrl, serverAddress);
 	} else if (command == "info" || command == "i") {
 		return await mainInfo(rt);
 	} else if (command == "list" || command == "l") {
