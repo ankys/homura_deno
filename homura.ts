@@ -182,7 +182,7 @@ function getStringArray(value: unknown) {
 }
 export async function main(args: string[]) {
 	let yargs = Yargs(args);
-	yargs.scriptName("homura").version(version);
+	yargs.scriptName("homura").version(version).strict();
 	yargs.usage("$0 [options] <command> [args]");
 	yargs.option("ignore-config", { describe: "Ignore default configs", type: "boolean" });
 	yargs.option("config", { alias: "c", describe: "Load config file", type: "string" });
@@ -193,18 +193,15 @@ export async function main(args: string[]) {
 	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
 	yargs.command(["build", "b"], "Build site", (yargs2: any) => {
 		yargs2.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
-		return yargs2;
 	});
 	yargs.command(["server", "s", "*"], "Start server mode", (yargs2: any) => {
 		yargs2.option("server", { describe: "Custom server url", type: "string", default: "http://localhost:8000/" });
 		yargs2.option("listen", { describe: "IP address listened", type: "string", default: "0.0.0.0" });
-		return yargs2;
 	});
 	yargs.command(["info", "i"], "Output configs");
 	yargs.command(["list", "l"], "List path of files");
 	yargs.command(["output <path>", "o"], "Output a specific file", (yargs2: any) => {
 		yargs2.positional("path", { describe: "Path of output file", type: "string" });
-		return yargs2;
 	});
 	const options = yargs.parse();
 	// console.log(options);
