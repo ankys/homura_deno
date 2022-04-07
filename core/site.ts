@@ -1,6 +1,7 @@
 
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
+import { normalizePath } from "./path.ts";
 import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
 import { TLValue, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
 import { Options, Config, Layout, Dynamic, mergeConfig } from "./config.ts";
@@ -135,9 +136,6 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 	return srcFiles;
 }
 
-export function normalizePath(path: string): string {
-	return path.replace(/(^|\/)\/*/g, "/");
-}
 function replacePath(path: string, matcher: Matcher, replace: string): (string | null) {
 	let m;
 	if (m = path.match(/^(.*)(\.[^\/\.]*)$/)) {

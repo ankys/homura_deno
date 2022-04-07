@@ -1,27 +1,20 @@
 
 import * as DOM from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.ts";
-import * as PathPosix from "https://deno.land/std@0.132.0/path/posix.ts";
 
+import { relativePath } from "../core/path.ts";
+import { getPathname } from "../core/pathname.ts";
 import { Runtime, Site, DestFile, TLValue } from "../core/site.ts";
 
 export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const pathBase = destFile.path;
-	const indexFiles = site.config.index as string[];
+	const indexFiles = site.config.index!;
 	function main(url: string) {
-		if (PathPosix.parse(url).root != PathPosix.sep) {
+		if (!url.startsWith("/")) {
 			return url;
 		}
-		const path = url;
-		const dirnameBase = PathPosix.dirname(pathBase);
-		const path2 = PathPosix.relative(dirnameBase, path);
-		if (url.endsWith(PathPosix.sep)) {
-			return path2 + PathPosix.sep;
-		}
-		const obj = PathPosix.parse(path2);
-		if (indexFiles.find((indexFile) => indexFile == obj.base)) {
-			return obj.dir + PathPosix.sep;
-		}
-		return path2;
+		const path = relativePath(pathBase, url);
+		const pathname = getPathname(path, indexFiles);
+		return pathname;
 	}
 	const doc = new DOM.DOMParser().parseFromString(text, "text/html")!;
 	for (const e of doc.querySelectorAll("[href]")) {
