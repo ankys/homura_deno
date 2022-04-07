@@ -99,7 +99,7 @@ async function mainOutput(rt: Runtime, path: string) {
 	const destFile = destFiles[path];
 	if (!destFile) {
 		console.error("⚠️", path);
-		throw "no path";
+		throw null;
 	}
 	const text = await getOutput(destFile, path, site, rt);
 	return text;
@@ -181,22 +181,24 @@ function getStringArray(value: unknown) {
 	return [];
 }
 export async function main(args: string[]) {
-	const yargs = Yargs(args);
+	let yargs = Yargs(args);
 	yargs.scriptName("homura").version(version);
-	yargs.command(["build", "b"], "build site");
-	yargs.command(["server", "s", "*"], "start server mode");
-	yargs.command(["info", "i"], "output configs");
-	yargs.command(["list", "l"], "list path of files");
-	yargs.command(["output <path>", "o"], "output a specific file");
-	yargs.option("ignore-config", { describe: "ignore default configs", type: "boolean" });
-	yargs.option("config", { alias: "c", describe: "load config file", type: "string" });
-	yargs.option("src", { alias: "s", describe: "source directory", type: "string", default: "." });
-	yargs.option("dest", { alias: "d", describe: "output directory", type: "string", default: "_site" });
-	yargs.option("data", { describe: "custom data file", type: "string" });
-	yargs.option("include", { describe: "custom file directory", type: "string" });
-	yargs.option("dry-run", { alias: "n", describe: "run with no file writing", type: "boolean" });
-	yargs.option("server", { describe: "url used in server mode", type: "string", default: "http://localhost:8000/" });
-	yargs.option("listen", { describe: "address used in server mode", type: "string", default: "0.0.0.0" });
+	yargs.usage("$0 [options] <command>");
+	yargs.command(["build", "b"], "Build site");
+	yargs.command(["server", "s", "*"], "Start server mode");
+	yargs.command(["info", "i"], "Output configs");
+	yargs.command(["list", "l"], "List path of files");
+	yargs.command(["output <path>", "o"], "Output a specific file");
+	yargs.option("ignore-config", { describe: "Ignore default configs", type: "boolean" });
+	yargs.option("config", { alias: "c", describe: "Load config file", type: "string" });
+	yargs.option("src", { alias: "s", describe: "Source directory", type: "string", default: "." });
+	yargs.option("dest", { alias: "d", describe: "Output directory", type: "string", default: "_site" });
+	yargs.option("data", { describe: "Custom data file", type: "string" });
+	yargs.option("include", { describe: "Custom file directory", type: "string", default: "_includes" });
+	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
+	yargs.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
+	yargs.option("server", { describe: "Url used in server mode", type: "string", default: "http://localhost:8000/" });
+	yargs.option("listen", { describe: "IP address used in server mode", type: "string", default: "0.0.0.0" });
 	const options = yargs.parse();
 	// console.log(options);
 
@@ -207,6 +209,7 @@ export async function main(args: string[]) {
 		dest: options["dest"],
 		datas: getStringArray(options["data"]),
 		include: options["include"],
+		layout: options["layout"],
 	};
 	const dry_run = !!options["dry-run"];
 	const serverUrl = new URL(options["server"]);
@@ -244,7 +247,7 @@ export async function main(args: string[]) {
 	// 	return await mainEdit(path, rt);
 	} else {
 		console.error("⚠️", command);
-		throw "no command";
+		throw null;
 	}
 }
 
@@ -255,6 +258,9 @@ if (import.meta.main) {
 			console.log(ret);
 		}
 	} catch (e) {
+		if (e) {
+			console.error(e);
+		}
 		Deno.exit(1);
 	}
 }
