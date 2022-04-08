@@ -42,14 +42,13 @@
       "engine": "t,relurl"
     }
   ],
-  "statics": [],
-  "dynamics": [
+  "statics": [
     {
-      "pattern": ".t",
-      "replace": "",
-      "engine": "t",
-      "layout": ""
-    },
+      "pattern": ".n.html",
+      "replace": ".txt"
+    }
+  ],
+  "dynamics": [
     {
       "pattern": ".t",
       "replace": "",

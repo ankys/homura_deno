@@ -165,11 +165,12 @@ function replacePath(path: string, matcher: Matcher, replace: string): (string |
 export type DestFile = { path: string, srcFile: SrcFile, dynamicInfo?: Dynamic }
 export type DestFiles = { [path: string]: DestFile }
 export function checkSrcFiles(srcFiles: SrcFiles, config: Config): DestFiles {
-	let rulesStatic: Matcher[] = [];
+	let rulesStatic: [Matcher, string][] = [];
 	for (const info of config.statics!) {
 		const pattern = info.pattern;
+		const replace = info.replace;
 		const matcher = newMatcher(pattern);
-		rulesStatic.push(matcher);
+		rulesStatic.push([matcher, replace]);
 	}
 	let rulesDynamic: [Matcher, string, Dynamic][] = [];
 	for (const info of config.dynamics!) {
@@ -192,13 +193,15 @@ export function checkSrcFiles(srcFiles: SrcFiles, config: Config): DestFiles {
 		}
 		destFiles[path] = destFile;
 	}
-	function sub(srcFile: SrcFile) {
+	for (const srcFile of srcFiles) {
+		let flag = false;
 		const path = srcFile.path;
-		for (const matcher of rulesStatic) {
-			const path2 = replacePath(path, matcher, "");
+		for (const [matcher, replace] of rulesStatic) {
+			const path2 = replacePath(path, matcher, replace);
 			if (path2 !== null) {
-				add(path, srcFile);
-				return;
+				const path3 = normalizePath(path2);
+				add(path3, srcFile);
+				flag = true;
 			}
 		}
 		for (const [matcher, replace, info] of rulesDynamic) {
@@ -206,13 +209,13 @@ export function checkSrcFiles(srcFiles: SrcFiles, config: Config): DestFiles {
 			if (path2 !== null) {
 				const path3 = normalizePath(path2);
 				add(path3, srcFile, info);
-				return;
+				flag = true;
 			}
 		}
-		add(path, srcFile);
-	}
-	for (const srcFile of srcFiles) {
-		sub(srcFile);
+		if (!flag) {
+			// static file
+			add(path, srcFile);
+		}
 	}
 	return destFiles;
 }

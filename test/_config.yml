@@ -11,11 +11,14 @@ layouts:
   - name: default
     file: default.n.html
     engine: t,relurl
+statics:
+  - pattern: .n.html
+    replace: .txt
 dynamics:
-  - pattern: .t
-    replace: ""
-    engine: t
-    layout: ""
+  # - pattern: .t
+  #   replace: ""
+  #   engine: t
+  #   layout: ""
   - pattern: .njk
     replace: ""
     engine: njk

@@ -9,6 +9,7 @@
 - add relative path filter.
 - adjust command line options.
 - add multi-extension support in matching.
+- add multiple output support.
 
 ## [0.3.1] - 2022-04-05
 
