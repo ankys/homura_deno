@@ -8,6 +8,7 @@
 - add usage in help.
 - add relative path filter.
 - adjust command line options.
+- add multi-extension support in matching.
 
 ## [0.3.1] - 2022-04-05
 

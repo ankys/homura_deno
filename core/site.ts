@@ -137,31 +137,23 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 }
 
 function replacePath(path: string, matcher: Matcher, replace: string): (string | null) {
+	// /a/b/c.d.e.txt -> .txt .e.txt .d.e.txt c.d.e.txt /a/b/c.d.e.txt
 	let m;
-	if (m = path.match(/^(.*)(\.[^\/\.]*)$/)) {
-		const [base, ext] = [m[1], m[2]];
+	const [dir, name] = (m = path.match(/^(.*?\/)([^\/]*)$/)) ? [m[1], m[2]] : ["", path];
+	const fs = name.split(".");
+	for (let i = 1; i < fs.length; i++) {
+		const base = fs.slice(0, fs.length - i).join(".");
+		const ext = name.substring(base.length);
 		if (testMatcher(matcher, ext)) {
 			const ext2 = replaceMatcher(matcher, ext, replace);
-			const path2 = base + ext2;
+			const path2 = dir + base + ext2;
 			return path2;
 		}
 	}
-	if (m = path.match(/^(.*?)(\.[^\/]*)$/)) {
-		// long ext
-		const [base, ext] = [m[1], m[2]];
-		if (testMatcher(matcher, ext)) {
-			const ext2 = replaceMatcher(matcher, ext, replace);
-			const path2 = base + ext2;
-			return path2;
-		}
-	}
-	if (m = path.match(/^(.*?\/)([^\/]*)$/)) {
-		const [base, name] = [m[1], m[2]];
-		if (testMatcher(matcher, name)) {
-			const name2 = replaceMatcher(matcher, name, replace);
-			const path2 = base + name2;
-			return path2;
-		}
+	if (testMatcher(matcher, name)) {
+		const name2 = replaceMatcher(matcher, name, replace);
+		const path2 = dir + name2;
+		return path2;
 	}
 	if (testMatcher(matcher, path)) {
 		const path2 = replaceMatcher(matcher, path, replace);

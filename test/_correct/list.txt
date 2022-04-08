@@ -1,4 +1,5 @@
 /a/index.html
+/a.b.html
 /a.txt
 /a.yml
 /allinfo.txt
