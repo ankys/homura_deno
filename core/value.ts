@@ -72,30 +72,30 @@ export async function loadValueFile<V>(file: string, cache: [Deno.FileInfo, V | 
 	}
 }
 
-export function parseFrontMatter(text: string): [TLValue | null, string] {
+export function parseFrontMatter(text: string): [string, string, string] {
 	let m;
 	if (m = text.match(/^---(?:\x0D\x0A|\x0D|\x0A)(.*?)(?:\x0D\x0A|\x0D|\x0A)---(?:\x0D\x0A|\x0D|\x0A)(.*)$/s)) {
+		const mimetype = "application/x-yaml";
 		const textValue = m[1];
 		const text = m[2];
-		const value = loadValueYaml<TLValue>(textValue);
-		return [value, text];
+		return [mimetype, textValue, text];
 	} else if (m = text.match(/^\+\+\+(?:\x0D\x0A|\x0D|\x0A)(.*?)(?:\x0D\x0A|\x0D|\x0A)\+\+\+(?:\x0D\x0A|\x0D|\x0A)(.*)$/s)) {
+		const mimetype = "application/toml";
 		const textValue = m[1];
 		const text = m[2];
-		const value = loadValueToml<TLValue>(textValue);
-		return [value, text];
+		return [mimetype, textValue, text];
 	} else if (m = text.match(/^(\{(?:\x0D\x0A|\x0D|\x0A).*?(?:\x0D\x0A|\x0D|\x0A)\})(?:\x0D\x0A|\x0D|\x0A)(.*)$/s)) {
+		const mimetype = "application/json";
 		const textValue = m[1];
 		const text = m[2];
-		const value = loadValueJson<TLValue>(textValue);
-		return [value, text];
+		return [mimetype, textValue, text];
 	} else if (m = text.match(/^(\{[^\x0D\x0A]*?\})(?:\x0D\x0A|\x0D|\x0A)(.*)$/s)) {
+		const mimetype = "application/json";
 		const textValue = m[1];
 		const text = m[2];
-		const value = loadValueJson<TLValue>(textValue);
-		return [value, text];
+		return [mimetype, textValue, text];
 	}
-	return [{}, text];
+	return ["", "", text];
 }
 export async function loadFrontMatterFile(filepath: string, cache: [Deno.FileInfo, TLValue | null, string] | null, rt: Runtime): Promise<[Deno.FileInfo, TLValue | null, string] | null> {
 	try {
@@ -108,12 +108,13 @@ export async function loadFrontMatterFile(filepath: string, cache: [Deno.FileInf
 		}
 		rt.showMessage("ℹ", null, [filepath]);
 		const text = await Deno.readTextFile(filepath);
+		const [mimetype, textValue, text2] = parseFrontMatter(text);
 		try {
-			const [value, text2] = parseFrontMatter(text);
+			const value = loadValue<TLValue>(textValue, mimetype);
 			return [info, value, text2];
 		} catch (e) {
 			rt.showMessage("⚠️", [filepath], null, e);
-			return [info, {}, text];
+			return [info, {}, text2];
 		}
 	} catch (e) {
 		rt.showMessage("⚠️", [filepath], null, e);
@@ -131,8 +132,9 @@ export async function loadFrontMatterFile2(filepath: string, cache: [Deno.FileIn
 		}
 		rt.showMessage("ℹ", null, [filepath]);
 		const text = await Deno.readTextFile(filepath);
+		const [mimetype, textValue, text2] = parseFrontMatter(text);
 		try {
-			const [value, text2] = parseFrontMatter(text);
+			const value = loadValue<TLValue>(textValue, mimetype);
 			return [info, value];
 		} catch (e) {
 			rt.showMessage("⚠️", [filepath], null, e);
@@ -154,8 +156,9 @@ export function loadFrontMatterFile2Sync(filepath: string, cache: [Deno.FileInfo
 		}
 		rt.showMessage("ℹ", null, [filepath]);
 		const text = Deno.readTextFileSync(filepath);
+		const [mimetype, textValue, text2] = parseFrontMatter(text);
 		try {
-			const [value, text2] = parseFrontMatter(text);
+			const value = loadValue<TLValue>(textValue, mimetype);
 			return [info, value];
 		} catch (e) {
 			rt.showMessage("⚠️", [filepath], null, e);

@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 - add werror, debug options.
+- modify parse front matter logic.
 
 ## [0.4.0] - 2022-04-09
 
