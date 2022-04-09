@@ -141,7 +141,7 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	}));
 	nunjucks.addFilter("value", toA((path: string) => {
 		const destFile = site.destFiles[path];
-		const value = getSrcValueSync(destFile, rt.cache);
+		const value = getSrcValueSync(destFile, rt);
 		return value;
 	}));
 	// path
@@ -168,14 +168,12 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 		try {
 			nunjucks.renderString(text, context, (e: any, text2: string) => {
 				if (e) {
-					rt.showMessage("⚠️", [destFile.path], null, e);
 					reject(e);
 					return;
 				}
 				resolve(text2);
 			});
 		} catch (e) {
-			rt.showMessage("⚠️", [destFile.path], null, e);
 			reject(e);
 		}
 	});

@@ -38,13 +38,16 @@ async function convertText(text: string, engine: string, values: (TLValue | null
 			let m;
 			const [href, fn] = (m = url.match(/^([^#]*)#(.*)$/)) ? [m[1], m[2]] : [url, "default"];
 			const convert = await importModule(href, fn);
-			text = await convert(text, values, destFile, site, rt);
+			try {
+				text = await convert(text, values, destFile, site, rt);
+			} catch (e) {
+				rt.showMessage("⚠️", [destFile.path], null, e);
+			}
 		}
 	}
 	return text;
 }
 export async function buildDynamic(destFile: DestFile, title: string, site: Site, rt: Runtime): Promise<string> {
-	const cache = rt.cache;
 	const layoutCaches = site.layoutCaches;
 	const srcFile = destFile.srcFile;
 	const dynamicInfo = destFile.dynamicInfo!;
@@ -58,14 +61,14 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 		const valueLayout = layout.value;
 		const textLayout = layout.text;
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")"]);
-		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
+		const [value, text] = (await loadSrcFile(filepathSrc, rt))!;
 		const text2 = await convertText(text, engine, [value], destFile, site, rt);
 		const valueContent: TLValue = { "content": text2 };
 		const text3 = await convertText(textLayout, engineLayout, [valueLayout, value, valueContent], destFile, site, rt);
 		return text3;
 	} else {
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")"]);
-		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
+		const [value, text] = (await loadSrcFile(filepathSrc, rt))!;
 		const text2 = await convertText(text, engine, [value], destFile, site, rt);
 		return text2;
 	}

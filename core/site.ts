@@ -16,39 +16,39 @@ export type Cache = {
 }
 export type Runtime = { showMessage: (...args: any[]) => void, configFiles: string[], configDefault: Config, configOption: Config, cache: Cache };
 
-export async function loadConfigFiles(files: string[], config: Config, cache: Cache) {
+export async function loadConfigFiles(files: string[], config: Config, rt: Runtime) {
 	for await (const file of files) {
-		const c = cache.cacheConfig[file];
-		const o = await loadValueFile<Config>(file, c);
+		const c = rt.cache.cacheConfig[file];
+		const o = await loadValueFile<Config>(file, c, rt);
 		if (o) {
 			const t = o;
 			const [info, config2] = t;
 			if (config2) {
 				config = mergeConfig(config, config2);
 			}
-			cache.cacheConfig[file] = t;
+			rt.cache.cacheConfig[file] = t;
 		} else {
-			delete cache.cacheConfig[file];
+			delete rt.cache.cacheConfig[file];
 		}
 	}
 	return config;
 }
 
-export async function loadDataFiles(config: Config, cache: Cache) {
+export async function loadDataFiles(config: Config, rt: Runtime) {
 	const dataFiles = config.datas as string[];
 	let values = [];
 	for await (const file of dataFiles) {
-		const c = cache.cacheData[file];
-		const o = await loadValueFile<TLValue>(file, c);
+		const c = rt.cache.cacheData[file];
+		const o = await loadValueFile<TLValue>(file, c, rt);
 		if (o) {
 			const t = o;
 			const [info, value] = t;
 			if (value) {
 				values.push(value);
 			}
-			cache.cacheData[file] = t;
+			rt.cache.cacheData[file] = t;
 		} else {
-			delete cache.cacheData[file];
+			delete rt.cache.cacheData[file];
 		}
 	}
 	return values;
@@ -56,23 +56,23 @@ export async function loadDataFiles(config: Config, cache: Cache) {
 
 type LayoutCache = { name: string, filepath: string, engine: string, value: TLValue | null, text: string };
 type LayoutCaches = { [name: string]: LayoutCache };
-export async function checkLayouts(config: Config, cache: Cache): Promise<LayoutCaches> {
+export async function checkLayouts(config: Config, rt: Runtime): Promise<LayoutCaches> {
 	const filepathLayout = config.layout!;
 	const layouts = config.layouts!;
 	let layouts2: LayoutCaches = {};
 	for (const layout of layouts) {
 		const { name, file, engine } = layout;
 		const filepath = Path.join(filepathLayout, file);
-		const c = cache.cacheLayout[filepath];
-		const o = await loadFrontMatterFile(filepath, c);
+		const c = rt.cache.cacheLayout[filepath];
+		const o = await loadFrontMatterFile(filepath, c, rt);
 		if (o) {
 			const t = o;
 			const [info, value, text] = t;
 			const layout2 = { name, filepath, engine, value, text };
 			layouts2[name] = layout2;
-			cache.cacheLayout[filepath] = t;
+			rt.cache.cacheLayout[filepath] = t;
 		} else {
-			delete cache.cacheLayout[filepath];
+			delete rt.cache.cacheLayout[filepath];
 		}
 	}
 	return layouts2;
@@ -220,31 +220,31 @@ export function checkSrcFiles(srcFiles: SrcFiles, config: Config, rt: Runtime): 
 	return destFiles;
 }
 
-export async function loadSrcFile(filepath: string, cache: Cache): Promise<([TLValue | null, string] | null)> {
-	const o = await loadFrontMatterFile(filepath);
+export async function loadSrcFile(filepath: string, rt: Runtime): Promise<([TLValue | null, string] | null)> {
+	const o = await loadFrontMatterFile(filepath, null, rt);
 	if (o) {
 		const [info, value, text] = o;
-		cache.cacheSrc[filepath] = [info, value];
+		rt.cache.cacheSrc[filepath] = [info, value];
 		return [value, text];
 	} else {
-		delete cache.cacheSrc[filepath];
+		delete rt.cache.cacheSrc[filepath];
 	}
 	return null;
 }
-export function getSrcValueSync(destFile: DestFile, cache: Cache): (TLValue | null) {
+export function getSrcValueSync(destFile: DestFile, rt: Runtime): (TLValue | null) {
 	if (!destFile.dynamicInfo) {
 		return null;
 	}
 	const srcFile = destFile.srcFile;
 	const filepath = srcFile.filepath;
-	const c = cache.cacheSrc[filepath];
-	const o = loadFrontMatterFile2Sync(filepath, c);
+	const c = rt.cache.cacheSrc[filepath];
+	const o = loadFrontMatterFile2Sync(filepath, c, rt);
 	if (o) {
 		const [info, value] = o;
-		cache.cacheSrc[filepath] = o;
+		rt.cache.cacheSrc[filepath] = o;
 		return value;
 	} else {
-		delete cache.cacheSrc[filepath];
+		delete rt.cache.cacheSrc[filepath];
 	}
 	return null;
 }
@@ -252,16 +252,16 @@ export function getSrcValueSync(destFile: DestFile, cache: Cache): (TLValue | nu
 export type Site = { config: Config, valuesData: TLValue[], layoutCaches: LayoutCaches, srcFiles: SrcFiles, destFiles: DestFiles };
 export async function loadConfig(rt: Runtime): Promise<Config> {
 	let config = rt.configDefault;
-	config = await loadConfigFiles(rt.configFiles, config, rt.cache);
+	config = await loadConfigFiles(rt.configFiles, config, rt);
 	config = mergeConfig(config, rt.configOption);
 	return config;
 }
 export async function loadSite(rt: Runtime): Promise<Site> {
 	const t1 = performance.now();
 	const config = await loadConfig(rt);
-	const valuesData = await loadDataFiles(config, rt.cache);
+	const valuesData = await loadDataFiles(config, rt);
 	// console.log(valuesData);
-	const layoutCaches = await checkLayouts(config, rt.cache);
+	const layoutCaches = await checkLayouts(config, rt);
 	// console.log(layoutCaches);
 	const t3 = performance.now();
 	const srcFiles = await checkSrcDir(config, rt);

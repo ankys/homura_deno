@@ -228,6 +228,9 @@ export async function main(args: string[]) {
 			args.push("\x1b[0m");
 		}
 		console.error.apply(null, args);
+		if (error) {
+			console.error(error);
+		}
 		if (type === "⚠️") {
 		}
 	}

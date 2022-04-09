@@ -3,6 +3,8 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import * as Yaml from "https://deno.land/std@0.132.0/encoding/yaml.ts";
 import * as Toml from "https://deno.land/std@0.132.0/encoding/toml.ts";
 
+import { Runtime } from "./site.ts";
+
 // export type Value = { [key: string]: Object };
 export type TLValue = Object;
 
@@ -26,29 +28,14 @@ export function getFilepath(file: string) {
 	return [mimetype, filepath];
 }
 
-function loadValueYaml<V>(text: string): (V | null) {
-	try {
-		return Yaml.parse(text) as V;
-	} catch (e) {
-		console.error(e);
-		return null;
-	}
+function loadValueYaml<V>(text: string): V {
+	return Yaml.parse(text) as V;
 }
-function loadValueToml<V>(text: string): (V | null) {
-	try {
-		return Toml.parse(text) as V;
-	} catch (e) {
-		console.error(e);
-		return null;
-	}
+function loadValueToml<V>(text: string): V {
+	return Toml.parse(text) as V;
 }
-function loadValueJson<V>(text: string): (V | null) {
-	try {
-		return JSON.parse(text) as V;
-	} catch (e) {
-		console.error(e);
-		return null;
-	}
+function loadValueJson<V>(text: string): V {
+	return JSON.parse(text) as V;
 }
 function loadValue<V>(text: string, mimetype: string): (V | null) {
 	switch (mimetype) {
@@ -61,7 +48,7 @@ function loadValue<V>(text: string, mimetype: string): (V | null) {
 	}
 	return null;
 }
-export async function loadValueFile<V>(file: string, cache?: [Deno.FileInfo, V | null]): Promise<[Deno.FileInfo, V | null] | null> {
+export async function loadValueFile<V>(file: string, cache: [Deno.FileInfo, V | null] | null, rt: Runtime): Promise<[Deno.FileInfo, V | null] | null> {
 	const [mimetype, filepath] = getFilepath(file);
 	try {
 		const info = await Deno.stat(filepath);
@@ -71,13 +58,15 @@ export async function loadValueFile<V>(file: string, cache?: [Deno.FileInfo, V |
 				return [info, value1];
 			}
 		}
-		console.error("ℹ", "\x1b[2m", filepath, "\x1b[0m");
+		rt.showMessage("ℹ", null, [filepath]);
 		const text = await Deno.readTextFile(filepath);
-		const value = loadValue(text, mimetype);
-		if (!value) {
-			console.error("⚠️", filepath);
+		try {
+			const value = loadValue<V>(text, mimetype);
+			return [info, value];
+		} catch (e) {
+			rt.showMessage("⚠️", [filepath], null, e);
+			return [info, null];
 		}
-		return [info, value as (V | null)];
 	} catch (e) {
 		return null;
 	}
@@ -108,7 +97,7 @@ export function parseFrontMatter(text: string): [TLValue | null, string] {
 	}
 	return [{}, text];
 }
-export async function loadFrontMatterFile(filepath: string, cache?: [Deno.FileInfo, TLValue | null, string]): Promise<[Deno.FileInfo, TLValue | null, string] | null> {
+export async function loadFrontMatterFile(filepath: string, cache: [Deno.FileInfo, TLValue | null, string] | null, rt: Runtime): Promise<[Deno.FileInfo, TLValue | null, string] | null> {
 	try {
 		const info = await Deno.stat(filepath);
 		if (cache) {
@@ -117,17 +106,21 @@ export async function loadFrontMatterFile(filepath: string, cache?: [Deno.FileIn
 				return [info, value1, text1];
 			}
 		}
-		console.error("ℹ", "\x1b[2m", filepath, "\x1b[0m");
+		rt.showMessage("ℹ", null, [filepath]);
 		const text = await Deno.readTextFile(filepath);
-		const [value, text2] = parseFrontMatter(text);
-		return [info, value, text2];
+		try {
+			const [value, text2] = parseFrontMatter(text);
+			return [info, value, text2];
+		} catch (e) {
+			rt.showMessage("⚠️", [filepath], null, e);
+			return [info, {}, text];
+		}
 	} catch (e) {
-		console.error("⚠️", filepath);
-		console.error(e);
+		rt.showMessage("⚠️", [filepath], null, e);
 		return null;
 	}
 }
-export async function loadFrontMatterFile2(filepath: string, cache?: [Deno.FileInfo, TLValue | null]): Promise<[Deno.FileInfo, TLValue | null] | null> {
+export async function loadFrontMatterFile2(filepath: string, cache: [Deno.FileInfo, TLValue | null], rt: Runtime): Promise<[Deno.FileInfo, TLValue | null] | null> {
 	try {
 		const info = await Deno.stat(filepath);
 		if (cache) {
@@ -136,17 +129,21 @@ export async function loadFrontMatterFile2(filepath: string, cache?: [Deno.FileI
 				return [info, value1];
 			}
 		}
-		console.error("ℹ", "\x1b[2m", filepath, "\x1b[0m");
+		rt.showMessage("ℹ", null, [filepath]);
 		const text = await Deno.readTextFile(filepath);
-		const [value, text2] = parseFrontMatter(text);
-		return [info, value];
+		try {
+			const [value, text2] = parseFrontMatter(text);
+			return [info, value];
+		} catch (e) {
+			rt.showMessage("⚠️", [filepath], null, e);
+			return [info, {}];
+		}
 	} catch (e) {
-		console.error("⚠️", filepath);
-		console.error(e);
+		rt.showMessage("⚠️", [filepath], null, e);
 		return null;
 	}
 }
-export function loadFrontMatterFile2Sync(filepath: string, cache?: [Deno.FileInfo, TLValue | null]): ([Deno.FileInfo, TLValue | null] | null) {
+export function loadFrontMatterFile2Sync(filepath: string, cache: [Deno.FileInfo, TLValue | null], rt: Runtime): ([Deno.FileInfo, TLValue | null] | null) {
 	try {
 		const info = Deno.statSync(filepath);
 		if (cache) {
@@ -155,13 +152,17 @@ export function loadFrontMatterFile2Sync(filepath: string, cache?: [Deno.FileInf
 				return [info, value1];
 			}
 		}
-		console.error("ℹ", "\x1b[2m", filepath, "\x1b[0m");
+		rt.showMessage("ℹ", null, [filepath]);
 		const text = Deno.readTextFileSync(filepath);
-		const [value, text2] = parseFrontMatter(text);
-		return [info, value];
+		try {
+			const [value, text2] = parseFrontMatter(text);
+			return [info, value];
+		} catch (e) {
+			rt.showMessage("⚠️", [filepath], null, e);
+			return [info, {}];
+		}
 	} catch (e) {
-		console.error("⚠️", filepath);
-		console.error(e);
+		rt.showMessage("⚠️", [filepath], null, e);
 		return null;
 	}
 }
