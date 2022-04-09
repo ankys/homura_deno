@@ -13,7 +13,7 @@ export async function startServer(rt: Runtime, url: URL, hostname: string) {
 		const pathname = new URL(req.url).pathname;
 		try {
 			if (!pathname.startsWith(pathnameRoot)) {
-				console.error("⚠️", pathname);
+				rt.showMessage("⚠️", [pathname]);
 				return new Response(null, { status: 403 });
 			}
 			const pathname2 = normalizePath(pathname.substring(pathnameRoot.length));
@@ -24,7 +24,7 @@ export async function startServer(rt: Runtime, url: URL, hostname: string) {
 			const paths = resolvePathname(pathname2, indexFiles);
 			const path = paths.find((path) => path in destFiles);
 			if (!path) {
-				console.error("⚠️", pathname);
+				rt.showMessage("⚠️", [pathname]);
 				return new Response(null, { status: 404 });
 			}
 			const destFile = destFiles[path];
@@ -32,12 +32,11 @@ export async function startServer(rt: Runtime, url: URL, hostname: string) {
 			const headers = new Headers({ "Content-Location": path, "Content-Type": "" });
 			return new Response(data, { headers });
 		} catch(e) {
-			console.error("⚠️", pathname);
-			console.error(e);
+			rt.showMessage("⚠️", [pathname], null, e);
 			return new Response(null, { status: 500 });
 		}
 	}
-	console.error("ℹ", url.href, "\x1b[2m", hostname, port, pathnameRoot, "\x1b[0m");
+	rt.showMessage("ℹ", [url.href], [hostname, port, pathnameRoot]);
 	await HTTPServer.serve(sub, { hostname, port });
 	// const server = Deno.listen({ hostname, port });
 	// for await (const conn of server) {

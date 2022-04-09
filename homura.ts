@@ -98,7 +98,7 @@ async function mainOutput(rt: Runtime, path: string) {
 	const destFiles = site.destFiles;
 	const destFile = destFiles[path];
 	if (!destFile) {
-		console.error("⚠️", path);
+		rt.showMessage("⚠️", [path]);
 		throw null;
 	}
 	const text = await getOutput(destFile, path, site, rt);
@@ -217,8 +217,22 @@ export async function main(args: string[]) {
 	};
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
+	function showMessage(type: string, main?: any[], sub?: any[], error?: any) {
+		let args: any[] = [type];
+		if (main) {
+			args = args.concat(main);
+		}
+		if (sub) {
+			args.push("\x1b[2m");
+			args = args.concat(sub);
+			args.push("\x1b[0m");
+		}
+		console.error.apply(null, args);
+		if (type === "⚠️") {
+		}
+	}
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
-	const rt: Runtime = { configFiles, configDefault, configOption, cache };
+	const rt: Runtime = { showMessage, configFiles, configDefault, configOption, cache };
 
 	const command = options._[0];
 	if (command == "build" || command == "b") {
@@ -244,7 +258,8 @@ export async function main(args: string[]) {
 	// 	const path = String(options._[1]);
 	// 	return await mainEdit(path, rt);
 	} else {
-		console.error("⚠️", command);
+		// error
+		rt.showMessage("⚠️", [command]);
 		throw null;
 	}
 }

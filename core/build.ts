@@ -57,14 +57,14 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 		const engineLayout = layout.engine;
 		const valueLayout = layout.value;
 		const textLayout = layout.text;
-		console.error("🔥", title, "\x1b[2m", filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")", "\x1b[0m");
+		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")"]);
 		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
 		const text2 = await convertText(text, engine, [value], destFile, site, rt);
 		const valueContent: TLValue = { "content": text2 };
 		const text3 = await convertText(textLayout, engineLayout, [valueLayout, value, valueContent], destFile, site, rt);
 		return text3;
 	} else {
-		console.error("🔥", title, "\x1b[2m", filepathSrc, "(" + engine + ")", "\x1b[0m");
+		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")"]);
 		const [value, text] = (await loadSrcFile(filepathSrc, cache))!;
 		const text2 = await convertText(text, engine, [value], destFile, site, rt);
 		return text2;
@@ -76,12 +76,12 @@ export async function getOutput(destFile: DestFile, title: string, site: Site, r
 		const t1 = performance.now();
 		const text = await buildDynamic(destFile, title, site, rt);
 		const t2 = performance.now();
-		console.error("⏱", "\x1b[2m", "get_output", (t2 - t1).toFixed() + "ms", "\x1b[0m")
+		rt.showMessage("⏱", null, ["get_output", (t2 - t1).toFixed() + "ms"])
 		return text;
 	} else {
 		const srcFile = destFile.srcFile;
 		const filepathSrc = srcFile.filepath;
-		console.error("🔥", title, "\x1b[2m", filepathSrc, "\x1b[0m");
+		rt.showMessage("🔥", [title], [filepathSrc]);
 		const buf = await Deno.readFile(filepathSrc);
 		return buf;
 	}
@@ -107,7 +107,7 @@ export async function buildDest(site: Site, rt: Runtime, modeDryRun?: boolean) {
 			}
 			if (entry.isFile) {
 				if (!destFiles[path]) {
-					console.error("⚠️", filepath);
+					rt.showMessage("⚠️", [filepath]);
 					if (!modeDryRun) {
 						await Deno.remove(filepath);
 					}
@@ -132,7 +132,7 @@ export async function buildDest(site: Site, rt: Runtime, modeDryRun?: boolean) {
 			const filepathSrc = srcFile.filepath;
 			const mtimeSrc = await FSGetMtime(filepathSrc);
 			async function main() {
-				console.error("🔥", filepathDest, "\x1b[2m", filepathSrc, "\x1b[0m");
+				rt.showMessage("🔥", [filepathDest], [filepathSrc]);
 				if (!modeDryRun) {
 					await FS.ensureFile(filepathDest);
 					await Deno.copyFile(filepathSrc, filepathDest);

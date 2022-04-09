@@ -14,7 +14,7 @@ export type Cache = {
 	cacheLayout: { [filepath: string]: [Deno.FileInfo, TLValue | null, string] },
 	cacheSrc: { [filepath: string]: [Deno.FileInfo, TLValue | null] },
 }
-export type Runtime = { configFiles: string[], configDefault: Config, configOption: Config, cache: Cache };
+export type Runtime = { showMessage: (...args: any[]) => void, configFiles: string[], configDefault: Config, configOption: Config, cache: Cache };
 
 export async function loadConfigFiles(files: string[], config: Config, cache: Cache) {
 	for await (const file of files) {
@@ -164,7 +164,7 @@ function replacePath(path: string, matcher: Matcher, replace: string): (string |
 
 export type DestFile = { path: string, srcFile: SrcFile, dynamicInfo?: Dynamic }
 export type DestFiles = { [path: string]: DestFile }
-export function checkSrcFiles(srcFiles: SrcFiles, config: Config): DestFiles {
+export function checkSrcFiles(srcFiles: SrcFiles, config: Config, rt: Runtime): DestFiles {
 	let rulesStatic: [Matcher, string][] = [];
 	for (const info of config.statics!) {
 		const pattern = info.pattern;
@@ -188,7 +188,7 @@ export function checkSrcFiles(srcFiles: SrcFiles, config: Config): DestFiles {
 		if (destFile2) {
 			const filepath = destFile.srcFile.filepath;
 			const filepath2 = destFile2.srcFile.filepath;
-			console.error("⚠️", path, "\x1b[2m", filepath, filepath2, "\x1b[0m");
+			rt.showMessage("⚠️", [path], [filepath, filepath2]);
 			return;
 		}
 		destFiles[path] = destFile;
@@ -267,10 +267,10 @@ export async function loadSite(rt: Runtime): Promise<Site> {
 	const srcFiles = await checkSrcDir(config, rt);
 	const t4 = performance.now();
 	// console.log(srcFiles);
-	const destFiles = await checkSrcFiles(srcFiles, config);
+	const destFiles = await checkSrcFiles(srcFiles, config, rt);
 	// console.log(destFiles);
 	const site = { config, valuesData, layoutCaches, srcFiles, destFiles };
 	const t2 = performance.now();
-	console.error("⏱", "\x1b[2m", "load_site", (t2 - t1).toFixed() + "(" + (t4 - t3).toFixed() + ")ms", "\x1b[0m")
+	rt.showMessage("⏱", null, ["load_site", (t2 - t1).toFixed() + "(" + (t4 - t3).toFixed() + ")ms"]);
 	return site;
 }

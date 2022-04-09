@@ -54,7 +54,7 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	const Loader = Nunjucks.Loader.extend({
 		getSource: (name: string) => {
 			const filepath = Path.join(filepathInclude, name);
-			console.error("ℹ", "\x1b[2m", filepath, "\x1b[0m");
+			rt.showMessage("ℹ", null, [filepath]);
 			const text = Deno.readTextFileSync(filepath);
 			return { src: text, path: filepath };
 		},
@@ -167,10 +167,15 @@ export async function convert(text: string, values: (TLValue | null)[], destFile
 	return new Promise((resolve, reject) => {
 		try {
 			nunjucks.renderString(text, context, (e: any, text2: string) => {
+				if (e) {
+					rt.showMessage("⚠️", [destFile.path], null, e);
+					reject(e);
+					return;
+				}
 				resolve(text2);
 			});
 		} catch (e) {
-			console.error(e);
+			rt.showMessage("⚠️", [destFile.path], null, e);
 			reject(e);
 		}
 	});
