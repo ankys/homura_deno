@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+- add werror, debug options.
+
 ## [0.4.0] - 2022-04-09
 
 - delete dry_run config (use dry_run option).

@@ -191,6 +191,8 @@ export async function main(args: string[]) {
 	yargs.option("data", { describe: "Custom data file", type: "string" });
 	yargs.option("include", { describe: "Custom file directory", type: "string", default: "_includes" });
 	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
+	yargs.option("werror", { describe: "Make warnings into errors", type: "boolean" });
+	yargs.option("debug", { describe: "Show debug messages", type: "boolean" });
 	yargs.command(["build", "b"], "Build site", (yargs2: any) => {
 		yargs2.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
 	});
@@ -215,9 +217,14 @@ export async function main(args: string[]) {
 		include: options["include"],
 		layout: options["layout"],
 	};
+	const modeWerror = !!options["werror"];
+	const modeDebug = !!options["debug"];
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
 	function showMessage(type: string, main?: any[], sub?: any[], error?: any) {
+		if (!modeDebug && type === "⏱") {
+			return;
+		}
 		let args: any[] = [type];
 		if (main) {
 			args = args.concat(main);
@@ -231,7 +238,8 @@ export async function main(args: string[]) {
 		if (error) {
 			console.error(error);
 		}
-		if (type === "⚠️") {
+		if (modeWerror && type === "⚠️") {
+			Deno.exit(1);
 		}
 	}
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
