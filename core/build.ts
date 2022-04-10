@@ -110,7 +110,7 @@ export async function buildDest(site: Site, rt: Runtime, modeDryRun?: boolean) {
 			}
 			if (entry.isFile) {
 				if (!destFiles[path]) {
-					rt.showMessage("⚠️", [filepath]);
+					rt.showMessage("ℹ", null, [filepath]);
 					if (!modeDryRun) {
 						await Deno.remove(filepath);
 					}

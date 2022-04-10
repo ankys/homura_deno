@@ -192,7 +192,8 @@ export async function main(args: string[]) {
 	yargs.option("include", { describe: "Custom file directory", type: "string", default: "_includes" });
 	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
 	yargs.option("werror", { describe: "Make warnings into errors", type: "boolean" });
-	yargs.option("debug", { describe: "Show debug messages", type: "boolean" });
+	yargs.option("info", { describe: "Show information messages", type: "boolean", default: true });
+	yargs.option("debug", { describe: "Show debug messages", type: "boolean", default: false });
 	yargs.command(["build", "b"], "Build site", (yargs2: any) => {
 		yargs2.option("dry-run", { alias: "n", describe: "Run with no file writing", type: "boolean" });
 	});
@@ -217,12 +218,16 @@ export async function main(args: string[]) {
 		include: options["include"],
 		layout: options["layout"],
 	};
-	const modeWerror = !!options["werror"];
+	const modeWError = !!options["werror"];
+	const modeInfo = !!options["info"];
 	const modeDebug = !!options["debug"];
 	let [configFilesDefault, configDefault] = configEmpty ? [emptyConfigFiles, emptyConfig] : [defaultConfigFiles, defaultConfig];
 	const configFiles = configs.concat(configFilesDefault);
 	function showMessage(type: string, main?: any[], sub?: any[], error?: any) {
 		if (!modeDebug && type === "⏱") {
+			return;
+		}
+		if (!modeInfo && type === "ℹ") {
 			return;
 		}
 		let args: any[] = [type];
@@ -241,7 +246,7 @@ export async function main(args: string[]) {
 		if (type === "⛔") {
 			Deno.exit(1);
 		}
-		if (modeWerror && type === "⚠️") {
+		if (modeWError && type === "⚠️") {
 			Deno.exit(2);
 		}
 	}
