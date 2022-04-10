@@ -238,8 +238,11 @@ export async function main(args: string[]) {
 		if (error) {
 			console.error(error);
 		}
-		if (modeWerror && type === "⚠️") {
+		if (type === "⛔") {
 			Deno.exit(1);
+		}
+		if (modeWerror && type === "⚠️") {
+			Deno.exit(2);
 		}
 	}
 	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
