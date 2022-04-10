@@ -19,6 +19,13 @@ function toEach<T1, T2>(fn: (...args: any[]) => T2) {
 				list.push(fn.apply(null, args));
 			}
 			return list;
+		} else if (typeof arg === "object") {
+			let obj: any = {};
+			for (const [key, a] of Object.entries(arg)) {
+				args[0] = a;
+				obj[key] = fn.apply(null, args);
+			}
+			return obj;
 		} else {
 			return fn.apply(null, args);
 		}

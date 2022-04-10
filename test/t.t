@@ -17,3 +17,5 @@ path: {{ path }}
 relative: {{ "/index.html" | relative }}
 relative: {{ "/index.html" | relative | pathname }}
 relative: {{ "/index.html" | relative("/a/") | pathname }}
+
+obj: {{ ({ a: "../b" } | url("http://localhost/a/") ).a }}
