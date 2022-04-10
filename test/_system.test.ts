@@ -22,3 +22,9 @@ Deno.test("list", async () => {
 	const c = await Deno.readTextFile("_correct/list.txt");
 	Asserts.assertEquals(splitLines(list).sort(), splitLines(c).sort());
 });
+
+Deno.test("output simple", async () => {
+	const output = await main(["o", "/a/index.html"]) as string;
+	const c = await Deno.readTextFile("_correct/index.html");
+	Asserts.assertEquals(output, c);
+});
