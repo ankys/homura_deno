@@ -101,8 +101,13 @@ async function mainOutput(rt: Runtime, path: string) {
 		rt.showMessage("⚠️", [path]);
 		throw null;
 	}
-	const text = await getOutput(destFile, path, site, rt);
-	return text;
+	const output = await getOutput(destFile, path, site, rt);
+	if (destFile.dynamicInfo) {
+		return output;
+	} else {
+		const text = new TextDecoder().decode(output as Uint8Array);
+		return text;
+	}
 }
 
 // async function mainNew(path: string, rt: Runtime) {
