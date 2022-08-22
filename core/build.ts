@@ -128,7 +128,11 @@ export async function buildDest(site: Site, rt: Runtime, modeDryRun?: boolean) {
 			const text = await getOutput(destFile, filepathDest, site, rt) as string;
 			if (!modeDryRun) {
 				await FS.ensureFile(filepathDest);
-				await Deno.writeTextFile(filepathDest, text);
+				// check update
+				const text2 = await Deno.readTextFile(filepathDest);
+				if (text2 != text) {
+					await Deno.writeTextFile(filepathDest, text);
+				}
 			}
 		} else {
 			const srcFile = destFile.srcFile;
