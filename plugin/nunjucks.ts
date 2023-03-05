@@ -171,7 +171,7 @@ export async function convert(text: string, values: TLValueChain, destFile: Dest
 			context[key] = value2;
 		}
 	}
-	console.log(context);
+	// console.log(context);
 	return new Promise((resolve, reject) => {
 		try {
 			nunjucks.renderString(text, context, (e: any, text2: string) => {

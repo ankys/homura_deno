@@ -62,6 +62,8 @@ export async function loadDataFiles(config: Config, rt: Runtime) {
 				datas.push(filepath);
 			}
 		}
+		datas.sort();
+		directories.sort();
 		for (const filepath of datas) {
 			const value = await loadDataFile(filepath, rt);
 			values.push(value);
@@ -145,6 +147,9 @@ export async function checkSrcDir(config: Config, values: TLValueChain, rt: Runt
 				srcs.push({ path, filepath });
 			}
 		}
+		datas.sort();
+		srcs.sort();
+		directories.sort();
 		const values = Array.from(valuesC);
 		for (const filepath of datas) {
 			const value = await loadDataFile(filepath, rt);
