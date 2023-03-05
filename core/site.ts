@@ -34,37 +34,46 @@ export async function loadConfigFiles(files: string[], config: Config, rt: Runti
 	return config;
 }
 
-export async function loadDataFile(path: string, rt: Runtime) {
-	const c = rt.cache.cacheData[path];
-	const o = await loadValueFile<TLValue>(path, c, rt);
+export async function loadDataFile(file: string, rt: Runtime) {
+	const c = rt.cache.cacheData[file];
+	const o = await loadValueFile<TLValue>(file, c, rt);
 	if (o) {
 		const t = o;
 		const [_info, value] = t;
-		rt.cache.cacheData[path] = t;
-		if (value) {
-			return value;
-		}
+		rt.cache.cacheData[file] = t;
+		return value;
 	} else {
-		delete rt.cache.cacheData[path];
+		delete rt.cache.cacheData[file];
 	}
 	return null;
 }
 export async function loadDataFiles(config: Config, rt: Runtime) {
-	const dataFiles = config.datafiles as string[];
-	let values = [];
-	for await (const file of dataFiles) {
-		const c = rt.cache.cacheData[file];
-		const o = await loadValueFile<TLValue>(file, c, rt);
-		if (o) {
-			const t = o;
-			const [info, value] = t;
-			if (value) {
-				values.push(value);
+	const dataDir = config.data as string;
+	let values: TLValueChain = [];
+	async function sub(filepathDir: string) {
+		const datas = [];
+		const directories = [];
+		for await (const entry of Deno.readDir(filepathDir)) {
+			const name = entry.name;
+			const filepath = Path.join(filepathDir, name);
+			if (entry.isDirectory) {
+				directories.push(filepath);
+			} else if (entry.isFile) {
+				datas.push(filepath);
 			}
-			rt.cache.cacheData[file] = t;
-		} else {
-			delete rt.cache.cacheData[file];
 		}
+		for (const filepath of datas) {
+			const value = await loadDataFile(filepath, rt);
+			values.push(value);
+		}
+		for (const filepath of directories) {
+			await sub(filepath);
+		}
+	}
+	try {
+		await sub(dataDir);
+	} catch {
+		console.log("⚠️", dataDir);
 	}
 	return values;
 }
@@ -93,9 +102,9 @@ export async function checkLayouts(config: Config, rt: Runtime): Promise<LayoutC
 	return layouts2;
 }
 
-type SrcFile = { path: string, filepath: string, value: TLValueChain };
+type SrcFile = { path: string, filepath: string, values: TLValueChain };
 type SrcFiles = SrcFile[];
-export async function checkSrcDir(config: Config, value: TLValueChain, rt: Runtime): Promise<SrcFiles> {
+export async function checkSrcDir(config: Config, values: TLValueChain, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
 	const dataFiles = config.datafiles as string[];
 	let excludes: string[] = [];
@@ -110,13 +119,13 @@ export async function checkSrcDir(config: Config, value: TLValueChain, rt: Runti
 	// console.log(excludes);
 	let ignores: RegExp[] = [];
 	for (const ignore of config.ignores!) {
-		let matcher = Path.globToRegExp(ignore);
+		const matcher = Path.globToRegExp(ignore);
 		ignores.push(matcher);
 	}
 	// console.log(ignores);
 
 	const srcFiles: SrcFiles = [];
-	async function sub(filepathDir: string, pathDir: string, valueC: TLValueChain) {
+	async function sub(filepathDir: string, pathDir: string, valuesC: TLValueChain) {
 		const datas = [];
 		const srcs = [];
 		const directories = [];
@@ -136,21 +145,21 @@ export async function checkSrcDir(config: Config, value: TLValueChain, rt: Runti
 				srcs.push({ path, filepath });
 			}
 		}
-		const value = Array.from(valueC);
+		const values = Array.from(valuesC);
 		for (const filepath of datas) {
-			const value1 = await loadDataFile(filepath, rt);
-			value.push(value1);
+			const value = await loadDataFile(filepath, rt);
+			values.push(value);
 		}
 		for (const { path, filepath } of srcs) {
-			const srcFile = { path, filepath, value };
+			const srcFile = { path, filepath, values };
 			srcFiles.push(srcFile);
 		}
 		for (const { path, filepath } of directories) {
-			await sub(filepath, path, value);
+			await sub(filepath, path, values);
 		}
 	}
 	try {
-		await sub(srcDir, "", value);
+		await sub(srcDir, "", values);
 	} catch {
 		console.log("⚠️", srcDir);
 	}
@@ -280,12 +289,12 @@ export async function loadConfig(rt: Runtime): Promise<Config> {
 export async function loadSite(rt: Runtime): Promise<Site> {
 	const t1 = performance.now();
 	const config = await loadConfig(rt);
-	// const valuesData = await loadDataFiles(config, rt);
-	// console.log(valuesData);
+	const valuesRoot = await loadDataFiles(config, rt);
+	// console.log(valuesRoot);
 	const layoutCaches = await checkLayouts(config, rt);
 	// console.log(layoutCaches);
 	const t3 = performance.now();
-	const srcFiles = await checkSrcDir(config, [], rt);
+	const srcFiles = await checkSrcDir(config, valuesRoot, rt);
 	const t4 = performance.now();
 	// console.log(srcFiles);
 	const destFiles = await checkSrcFiles(srcFiles, config, rt);

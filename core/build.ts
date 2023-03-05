@@ -52,7 +52,7 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 	const srcFile = destFile.srcFile;
 	const dynamicInfo = destFile.dynamicInfo!;
 	const filepathSrc = srcFile.filepath;
-	const valueSrc = srcFile.value;
+	const valuesSrc = srcFile.values;
 	const engine = dynamicInfo.engine;
 	const layoutName = dynamicInfo.layout;
 	const layout = layoutCaches[layoutName];
@@ -63,14 +63,14 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 		const textLayout = layout.text;
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")"]);
 		const [valueSrcFile, text] = (await loadSrcFile(filepathSrc, rt))!;
-		const text2 = await convertText(text, engine, valueSrc.concat([valueSrcFile]), destFile, site, rt);
+		const text2 = await convertText(text, engine, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
 		const valueContent: TLValue = { "content": text2 };
-		const text3 = await convertText(textLayout, engineLayout, valueSrc.concat([valueLayout, valueSrcFile, valueContent]), destFile, site, rt);
+		const text3 = await convertText(textLayout, engineLayout, valuesSrc.concat([valueLayout, valueSrcFile, valueContent]), destFile, site, rt);
 		return text3;
 	} else {
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")"]);
 		const [valueSrcFile, text] = (await loadSrcFile(filepathSrc, rt))!;
-		const text2 = await convertText(text, engine, valueSrc.concat([valueSrcFile]), destFile, site, rt);
+		const text2 = await convertText(text, engine, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
 		return text2;
 	}
 }

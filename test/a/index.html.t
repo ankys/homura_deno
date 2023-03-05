@@ -9,6 +9,6 @@ username: James
   <body>
     <h1>{{ title }}</h1>
     Hello {{ username }}.
-    Option: {{ option }}.
+    Option: {{ option }} {{ option2 }}.
   </body>
 </html>

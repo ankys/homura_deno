@@ -38,7 +38,7 @@ function getInfo(filepath: string): Info {
 	const mtime = info.mtime!;
 	return { fsize, mtime };
 }
-export async function convert(text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+export async function convert(text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const { config, layoutCaches, srcFiles, destFiles } = site;
 	const filepathInclude = config.include!;
 	const indexFiles = config.index!;
@@ -163,7 +163,6 @@ export async function convert(text: string, value: TLValueChain, destFile: DestF
 		return new URL(url, base);
 	}));
 	let context: { [key: string]: Object } = {};
-	const values = value;
 	for (const value of values) {
 		if (!value) {
 			continue;
