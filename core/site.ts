@@ -101,32 +101,33 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 		for await (const entry of Deno.readDir(filepathDir)) {
 			const name = entry.name;
 			const filepath = Path.join(filepathDir, name);
-			const path = pathDir + "/" + name;
 			if (entry.isFile && dataFiles.some((dataFile) => dataFile === name)) {
-				datas.push(filepath);
+				datas.push({ name, filepath });
 			} else if (excludes.some((exclude) => exclude == filepath)) {
 				continue;
 			} else if (ignores.some((ignore) => !!name.match(ignore))) {
 				continue;
 			} else if (entry.isDirectory) {
-				directories.push({ path, filepath });
+				directories.push({ name, filepath });
 			} else if (entry.isFile) {
-				srcs.push({ path, filepath });
+				srcs.push({ name, filepath });
 			}
 		}
-		datas.sort((a, b) => a.localeCompare(b));
-		srcs.sort();
-		directories.sort();
+		datas.sort((a, b) => a.name.localeCompare(b.name));
+		srcs.sort((a, b) => a.name.localeCompare(b.name));
+		directories.sort((a, b) => a.name.localeCompare(b.name));
 		const values = Array.from(valuesC);
-		for (const filepath of datas) {
+		for (const { name, filepath } of datas) {
 			const value = await loadDataFile(filepath, rt);
 			values.push(value);
 		}
-		for (const { path, filepath } of srcs) {
+		for (const { name, filepath } of srcs) {
+			const path = pathDir + "/" + name;
 			const srcFile = { path, filepath, values };
 			srcFiles.push(srcFile);
 		}
-		for (const { path, filepath } of directories) {
+		for (const { name, filepath } of directories) {
+			const path = pathDir + "/" + name;
 			await sub(filepath, path, values);
 		}
 	}
