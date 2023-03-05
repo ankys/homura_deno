@@ -47,38 +47,6 @@ export async function loadDataFile(file: string, rt: Runtime) {
 	}
 	return null;
 }
-export async function loadDataFiles(config: Config, rt: Runtime) {
-	const dataDir = config.data as string;
-	let values: TLValueChain = [];
-	async function sub(filepathDir: string) {
-		const datas = [];
-		const directories = [];
-		for await (const entry of Deno.readDir(filepathDir)) {
-			const name = entry.name;
-			const filepath = Path.join(filepathDir, name);
-			if (entry.isDirectory) {
-				directories.push(filepath);
-			} else if (entry.isFile) {
-				datas.push(filepath);
-			}
-		}
-		datas.sort();
-		directories.sort();
-		for (const filepath of datas) {
-			const value = await loadDataFile(filepath, rt);
-			values.push(value);
-		}
-		for (const filepath of directories) {
-			await sub(filepath);
-		}
-	}
-	try {
-		await sub(dataDir);
-	} catch {
-		console.log("⚠️", dataDir);
-	}
-	return values;
-}
 
 type LayoutCache = { name: string, filepath: string, engine: string, value: TLValue | null, text: string };
 type LayoutCaches = { [name: string]: LayoutCache };
@@ -106,16 +74,15 @@ export async function checkLayouts(config: Config, rt: Runtime): Promise<LayoutC
 
 type SrcFile = { path: string, filepath: string, values: TLValueChain };
 type SrcFiles = SrcFile[];
-export async function checkSrcDir(config: Config, values: TLValueChain, rt: Runtime): Promise<SrcFiles> {
+export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
-	const dataFiles = config.datafiles as string[];
+	const dataFiles = config.data as string[];
 	let excludes: string[] = [];
 	for (const file of rt.configFiles) {
-		const [mimetype, filepath] = getFilepath(file);
+		const [filepath, _mimetype] = getFilepath(file);
 		excludes.push(filepath);
 	}
 	excludes.push(config.dest!);
-	excludes.push(config.data!);
 	excludes.push(config.include!);
 	excludes.push(config.layout!);
 	// console.log(excludes);
@@ -147,7 +114,7 @@ export async function checkSrcDir(config: Config, values: TLValueChain, rt: Runt
 				srcs.push({ path, filepath });
 			}
 		}
-		datas.sort();
+		datas.sort((a, b) => a.localeCompare(b));
 		srcs.sort();
 		directories.sort();
 		const values = Array.from(valuesC);
@@ -164,6 +131,7 @@ export async function checkSrcDir(config: Config, values: TLValueChain, rt: Runt
 		}
 	}
 	try {
+		let values: TLValueChain = [];
 		await sub(srcDir, "", values);
 	} catch {
 		console.log("⚠️", srcDir);
@@ -294,12 +262,10 @@ export async function loadConfig(rt: Runtime): Promise<Config> {
 export async function loadSite(rt: Runtime): Promise<Site> {
 	const t1 = performance.now();
 	const config = await loadConfig(rt);
-	const valuesRoot = await loadDataFiles(config, rt);
-	// console.log(valuesRoot);
 	const layoutCaches = await checkLayouts(config, rt);
 	// console.log(layoutCaches);
 	const t3 = performance.now();
-	const srcFiles = await checkSrcDir(config, valuesRoot, rt);
+	const srcFiles = await checkSrcDir(config, rt);
 	const t4 = performance.now();
 	// console.log(srcFiles);
 	const destFiles = await checkSrcFiles(srcFiles, config, rt);

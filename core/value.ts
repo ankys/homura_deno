@@ -25,8 +25,8 @@ export function getMimetype(filepath: string) {
 }
 export function getFilepath(file: string) {
 	let m;
-	const [mimetype, filepath] = (m = file.match(/^(.*):([^:]*)$/)) ? [m[1], m[2]] : [getMimetype(file), file];
-	return [mimetype, filepath];
+	const [filepath, mimetype] = (m = file.match(/^(.*)#([^#]*)$/)) ? [m[1], m[2]] : [file, getMimetype(file)];
+	return [filepath, mimetype];
 }
 
 function loadValueYaml<V>(text: string): V {
@@ -50,7 +50,7 @@ function loadValue<V>(text: string, mimetype: string): (V | null) {
 	return null;
 }
 export async function loadValueFile<V>(file: string, cache: [Deno.FileInfo, V | null] | null, rt: Runtime): Promise<[Deno.FileInfo, V | null] | null> {
-	const [mimetype, filepath] = getFilepath(file);
+	const [filepath, mimetype] = getFilepath(file);
 	try {
 		const info = await Deno.stat(filepath);
 		if (cache) {
