@@ -34,6 +34,21 @@ export async function loadConfigFiles(files: string[], config: Config, rt: Runti
 	return config;
 }
 
+export async function loadDataFile(path: string, rt: Runtime) {
+	const c = rt.cache.cacheData[path];
+	const o = await loadValueFile<TLValue>(path, c, rt);
+	if (o) {
+		const t = o;
+		const [_info, value] = t;
+		rt.cache.cacheData[path] = t;
+		if (value) {
+			return value;
+		}
+	} else {
+		delete rt.cache.cacheData[path];
+	}
+	return null;
+}
 export async function loadDataFiles(config: Config, rt: Runtime) {
 	const dataFiles = config.datafiles as string[];
 	let values = [];
@@ -82,16 +97,14 @@ type SrcFile = { path: string, filepath: string };
 type SrcFiles = SrcFile[];
 export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
+	const dataFiles = config.datafiles as string[];
 	let excludes: string[] = [];
 	for (const file of rt.configFiles) {
 		const [mimetype, filepath] = getFilepath(file);
 		excludes.push(filepath);
 	}
 	excludes.push(config.dest!);
-	for (const file of config.datafiles!) {
-		const [mimetype, filepath] = getFilepath(file);
-		excludes.push(filepath);
-	}
+	excludes.push(config.data!);
 	excludes.push(config.include!);
 	excludes.push(config.layout!);
 	// console.log(excludes);
@@ -110,6 +123,12 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 			// let filepath = filepath.strip_prefix(".").unwrap_or(&filepath);
 			if (excludes.some((exclude) => exclude == filepath)) {
 				continue;
+			}
+			// data
+			if (dataFiles.some((dataFile) => dataFile == name) {
+				console.log("aaa");
+				const value = await loadDataFile(filepath, rt);
+				console.log(value);
 			}
 			if (ignores.some((ignore) => !!name.match(ignore))) {
 				continue;
