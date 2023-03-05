@@ -38,8 +38,8 @@ function getInfo(filepath: string): Info {
 	const mtime = info.mtime!;
 	return { fsize, mtime };
 }
-export async function convert(text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
-	const { config, valuesData, layoutCaches, srcFiles, destFiles } = site;
+export async function convert(text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+	const { config, layoutCaches, srcFiles, destFiles } = site;
 	const filepathInclude = config.include!;
 	const indexFiles = config.index!;
 	function addExtension(nunjucks: any, name: string, func: Function) {
@@ -163,7 +163,8 @@ export async function convert(text: string, values: TLValueChain, destFile: Dest
 		return new URL(url, base);
 	}));
 	let context: { [key: string]: Object } = {};
-	for (const value of valuesData.concat(values)) {
+	const values = value;
+	for (const value of values) {
 		if (!value) {
 			continue;
 		}
@@ -171,6 +172,7 @@ export async function convert(text: string, values: TLValueChain, destFile: Dest
 			context[key] = value2;
 		}
 	}
+	console.log(context);
 	return new Promise((resolve, reject) => {
 		try {
 			nunjucks.renderString(text, context, (e: any, text2: string) => {

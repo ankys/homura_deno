@@ -7,7 +7,7 @@ import { TLValue, TLValueChain, getFilepath, loadValueFile, loadFrontMatterFile,
 import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
 export type { TLValue, TLValueChain } from "./value.ts";
-export type Convert = (text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
+export type Convert = (text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },
 	cacheData: { [file: string]: [Deno.FileInfo, TLValue | null] },
@@ -93,9 +93,9 @@ export async function checkLayouts(config: Config, rt: Runtime): Promise<LayoutC
 	return layouts2;
 }
 
-type SrcFile = { path: string, filepath: string };
+type SrcFile = { path: string, filepath: string, value: TLValueChain };
 type SrcFiles = SrcFile[];
-export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
+export async function checkSrcDir(config: Config, value: TLValueChain, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
 	const dataFiles = config.datafiles as string[];
 	let excludes: string[] = [];
@@ -116,39 +116,41 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 	// console.log(ignores);
 
 	const srcFiles: SrcFiles = [];
-	async function sub(filepathDir: string, pathDir: string) {
+	async function sub(filepathDir: string, pathDir: string, valueC: TLValueChain) {
+		const datas = [];
+		const srcs = [];
+		const directories = [];
 		for await (const entry of Deno.readDir(filepathDir)) {
 			const name = entry.name;
 			const filepath = Path.join(filepathDir, name);
-			// let filepath = filepath.strip_prefix(".").unwrap_or(&filepath);
-			if (excludes.some((exclude) => exclude == filepath)) {
-				continue;
-			}
-			// data
-			if (dataFiles.some((dataFile) => dataFile == name) {
-				console.log("aaa");
-				const value = await loadDataFile(filepath, rt);
-				console.log(value);
-			}
-			if (ignores.some((ignore) => !!name.match(ignore))) {
-				continue;
-			}
 			const path = pathDir + "/" + name;
-			if (ignores.some((ignore) => !!path.match(ignore))) {
+			if (entry.isFile && dataFiles.some((dataFile) => dataFile === name)) {
+				datas.push(filepath);
+			} else if (excludes.some((exclude) => exclude == filepath)) {
 				continue;
+			} else if (ignores.some((ignore) => !!name.match(ignore))) {
+				continue;
+			} else if (entry.isDirectory) {
+				directories.push({ path, filepath });
+			} else if (entry.isFile) {
+				srcs.push({ path, filepath });
 			}
-			// console.log(path, name, filepath);
-			if (entry.isDirectory) {
-				await sub(filepath, path);
-			}
-			if (entry.isFile) {
-				const srcFile = { path, filepath };
-				srcFiles.push(srcFile);
-			}
+		}
+		const value = Array.from(valueC);
+		for (const filepath of datas) {
+			const value1 = await loadDataFile(filepath, rt);
+			value.push(value1);
+		}
+		for (const { path, filepath } of srcs) {
+			const srcFile = { path, filepath, value };
+			srcFiles.push(srcFile);
+		}
+		for (const { path, filepath } of directories) {
+			await sub(filepath, path, value);
 		}
 	}
 	try {
-		await sub(srcDir, "");
+		await sub(srcDir, "", value);
 	} catch {
 		console.log("⚠️", srcDir);
 	}
@@ -268,7 +270,7 @@ export function getSrcValueSync(destFile: DestFile, rt: Runtime): (TLValue | nul
 	return null;
 }
 
-export type Site = { config: Config, valuesData: TLValue[], layoutCaches: LayoutCaches, srcFiles: SrcFiles, destFiles: DestFiles };
+export type Site = { config: Config, layoutCaches: LayoutCaches, srcFiles: SrcFiles, destFiles: DestFiles };
 export async function loadConfig(rt: Runtime): Promise<Config> {
 	let config = rt.configDefault;
 	config = await loadConfigFiles(rt.configFiles, config, rt);
@@ -278,17 +280,17 @@ export async function loadConfig(rt: Runtime): Promise<Config> {
 export async function loadSite(rt: Runtime): Promise<Site> {
 	const t1 = performance.now();
 	const config = await loadConfig(rt);
-	const valuesData = await loadDataFiles(config, rt);
+	// const valuesData = await loadDataFiles(config, rt);
 	// console.log(valuesData);
 	const layoutCaches = await checkLayouts(config, rt);
 	// console.log(layoutCaches);
 	const t3 = performance.now();
-	const srcFiles = await checkSrcDir(config, rt);
+	const srcFiles = await checkSrcDir(config, [], rt);
 	const t4 = performance.now();
 	// console.log(srcFiles);
 	const destFiles = await checkSrcFiles(srcFiles, config, rt);
 	// console.log(destFiles);
-	const site = { config, valuesData, layoutCaches, srcFiles, destFiles };
+	const site = { config, layoutCaches, srcFiles, destFiles };
 	const t2 = performance.now();
 	rt.showMessage("⏱", null, ["load_site", (t2 - t1).toFixed() + "(" + (t4 - t3).toFixed() + ")ms"]);
 	return site;
