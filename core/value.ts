@@ -7,6 +7,7 @@ import { Runtime } from "./site.ts";
 
 // export type Value = { [key: string]: Object };
 export type TLValue = Object;
+export type TLValueChain = (TLValue | null)[]
 
 export function getMimetype(filepath: string) {
 	const ext = Path.extname(filepath);

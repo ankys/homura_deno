@@ -22,7 +22,8 @@ const defaultConfig: Config = {
 		"index.html",
 		"index.htm",
 	],
-	datas: [
+	data: "_data",
+	datafiles: [
 		// "_data.ts",
 		// "_data.js",
 		"_data.yml",
@@ -55,7 +56,7 @@ const emptyConfig: Config = {
 	src: undefined,
 	dest: undefined,
 	index: undefined,
-	datas: undefined,
+	data: undefined,
 	include: undefined,
 	layout: undefined,
 	engines: undefined,
@@ -193,7 +194,8 @@ export async function main(args: string[]) {
 	yargs.option("config", { alias: "c", describe: "Load config file", type: "string" });
 	yargs.option("src", { alias: "s", describe: "Source directory", type: "string", default: "." });
 	yargs.option("dest", { alias: "d", describe: "Output directory", type: "string", default: "_site" });
-	yargs.option("data", { describe: "Custom data file", type: "string" });
+	yargs.option("data", { describe: "Custom data directory", type: "string" });
+	yargs.option("data-file", { describe: "Custom data file", type: "string" });
 	yargs.option("include", { describe: "Custom file directory", type: "string", default: "_includes" });
 	yargs.option("layout", { describe: "Custom layout file directory", type: "string", default: "_layouts" });
 	yargs.option("werror", { describe: "Make warnings into errors", type: "boolean" });
@@ -219,7 +221,8 @@ export async function main(args: string[]) {
 	let configOption: Config = {
 		src: options["src"],
 		dest: options["dest"],
-		datas: getStringArray(options["data"]),
+		data: options["data"],
+		datafiles: getStringArray(options["data-file"]),
 		include: options["include"],
 		layout: options["layout"],
 	};

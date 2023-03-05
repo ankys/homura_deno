@@ -3,11 +3,11 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 
 import { normalizePath } from "./path.ts";
 import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
-import { TLValue, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
+import { TLValue, TLValueChain, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
 import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
 
-export type { TLValue } from "./value.ts";
-export type Convert = (text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
+export type { TLValue, TLValueChain } from "./value.ts";
+export type Convert = (text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },
 	cacheData: { [file: string]: [Deno.FileInfo, TLValue | null] },
@@ -35,7 +35,7 @@ export async function loadConfigFiles(files: string[], config: Config, rt: Runti
 }
 
 export async function loadDataFiles(config: Config, rt: Runtime) {
-	const dataFiles = config.datas as string[];
+	const dataFiles = config.datafiles as string[];
 	let values = [];
 	for await (const file of dataFiles) {
 		const c = rt.cache.cacheData[file];
@@ -88,7 +88,7 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 		excludes.push(filepath);
 	}
 	excludes.push(config.dest!);
-	for (const file of config.datas!) {
+	for (const file of config.datafiles!) {
 		const [mimetype, filepath] = getFilepath(file);
 		excludes.push(filepath);
 	}

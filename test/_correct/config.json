@@ -5,7 +5,8 @@
     "index.html",
     "index.htm"
   ],
-  "datas": [
+  "data": "_data",
+  "datafiles": [
     "_data.yml",
     "_data.yaml",
     "_data.toml",

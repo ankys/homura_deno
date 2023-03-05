@@ -3,9 +3,9 @@ import * as DOM from "https://deno.land/x/deno_dom@v0.1.21-alpha/deno-dom-wasm.t
 
 import { relativePath } from "../core/path.ts";
 import { getPathname } from "../core/pathname.ts";
-import { Runtime, Site, DestFile, TLValue } from "../core/site.ts";
+import { Runtime, Site, DestFile, TLValueChain } from "../core/site.ts";
 
-export async function convert(text: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+export async function convert(text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const pathBase = destFile.path;
 	const indexFiles = site.config.index!;
 	function main(url: string) {

@@ -2,7 +2,7 @@
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import * as FS from "https://deno.land/std@0.132.0/fs/mod.ts";
 
-import { Runtime, Site, DestFile, TLValue, DestFiles, loadSrcFile } from "./site.ts";
+import { Runtime, Site, DestFile, TLValue, TLValueChain, DestFiles, loadSrcFile } from "./site.ts";
 import { importModule } from "../plugin/lib.ts";
 
 export async function FSGetMtime(filepath: string): Promise<Date> {
@@ -21,7 +21,7 @@ async function FSIsEmptyDirectory(path: string) {
 	return true;
 }
 
-async function convertText(text: string, engine: string, values: (TLValue | null)[], destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+async function convertText(text: string, engine: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const config = site.config;
 	const engines1 = config.engines!;
 	const engines: { [name: string]: string } = {};
