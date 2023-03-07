@@ -5,6 +5,12 @@
     "index.html",
     "index.htm"
   ],
+  "settings": [
+    "_setting.yml",
+    "_setting.yaml",
+    "_setting.toml",
+    "_setting.json"
+  ],
   "data": [
     "_data.yml",
     "_data.yaml",

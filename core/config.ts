@@ -14,6 +14,7 @@ export type Config = {
 	src?: string;
 	dest?: string;
 	index?: string[];
+	settings?: string[];
 	data?: string[];
 	include?: string;
 	layout?: string;
@@ -27,6 +28,7 @@ export function mergeConfig(a: Config, b: Config): Config {
 	const src = b.src || a.src;
 	const dest = b.dest || a.dest;
 	const index = toA(a.index).concat(toA(b.index));
+	const settings = toA(a.settings).concat(toA(b.settings));
 	const data = toA(a.data).concat(toA(b.data));
 	const include = b.include || a.include;
 	const layout = b.layout || a.layout;
@@ -35,11 +37,12 @@ export function mergeConfig(a: Config, b: Config): Config {
 	const statics = toA(a.statics).concat(toA(b.statics));
 	const dynamics = toA(a.dynamics).concat(toA(b.dynamics));
 	const ignores = toA(a.ignores).concat(toA(b.ignores));
-	const config: Config = { src, dest, index, data, include, layout, engines, layouts, statics, dynamics, ignores };
+	const config: Config = { src, dest, index, settings, data, include, layout, engines, layouts, statics, dynamics, ignores };
 	return config;
 }
 export type Setting = {
 	index?: string[];
+	settings?: string[];
 	data?: string[];
 	include?: string;
 	layout?: string;
@@ -51,6 +54,7 @@ export type Setting = {
 }
 export function mergeSetting(a: Config | Setting, b: Config | Setting): Setting {
 	const index = toA(a.index).concat(toA(b.index));
+	const settings = toA(a.settings).concat(toA(b.settings));
 	const data = toA(a.data).concat(toA(b.data));
 	const include = b.include || a.include;
 	const layout = b.layout || a.layout;
@@ -59,6 +63,6 @@ export function mergeSetting(a: Config | Setting, b: Config | Setting): Setting 
 	const statics = toA(a.statics).concat(toA(b.statics));
 	const dynamics = toA(a.dynamics).concat(toA(b.dynamics));
 	const ignores = toA(a.ignores).concat(toA(b.ignores));
-	const setting: Setting = { index, data, include, layout, engines, layouts, statics, dynamics, ignores };
+	const setting: Setting = { index, settings, data, include, layout, engines, layouts, statics, dynamics, ignores };
 	return setting;
 }

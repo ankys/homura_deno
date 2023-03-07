@@ -22,6 +22,12 @@ const defaultConfig: Config = {
 		"index.html",
 		"index.htm",
 	],
+	settings: [
+		"_setting.yml",
+		"_setting.yaml",
+		"_setting.toml",
+		"_setting.json",
+	],
 	data: [
 		// "_data.ts",
 		// "_data.js",
@@ -55,6 +61,7 @@ const emptyConfig: Config = {
 	src: undefined,
 	dest: undefined,
 	index: undefined,
+	settings: undefined,
 	data: undefined,
 	include: undefined,
 	layout: undefined,
