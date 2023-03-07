@@ -4,7 +4,7 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import { normalizePath } from "./path.ts";
 import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
 import { TLValue, TLValueChain, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
-import { Config, Setting, Layout, Dynamic, mergeConfig } from "./config.ts";
+import { Config, Setting, Layout, Dynamic, mergeConfig, mergeSetting } from "./config.ts";
 
 export type { TLValue, TLValueChain } from "./value.ts";
 export type Convert = (text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
@@ -86,13 +86,24 @@ export async function checkLayouts(config: Config, rt: Runtime): Promise<LayoutC
 	return layouts2;
 }
 
+function splitArray(list: string[], list2: string[]) {
+	let a = [];
+	let b = [];
+	for (const item of list) {
+		if (list2.some((item2) => item2 === item)) {
+			a.push(item);
+		} else {
+			b.push(item);
+		}
+	}
+	return [a, b];
+}
 type SrcFile = { path: string, filepath: string, values: TLValueChain };
 type SrcFiles = SrcFile[];
 export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
 	const setting = config as Setting;
 
-	const dataFiles = config.data as string[];
 	let excludes: string[] = [];
 	for (const file of rt.configFiles) {
 		const [filepath, _mimetype] = getFilepath(file);
@@ -102,58 +113,69 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 	excludes.push(config.include!);
 	excludes.push(config.layout!);
 	// console.log(excludes);
-	let ignores: RegExp[] = [];
-	for (const ignore of config.ignores!) {
-		const matcher = Path.globToRegExp(ignore);
-		ignores.push(matcher);
-	}
-	// console.log(ignores);
 
 	const srcFiles: SrcFiles = [];
 	async function sub(filepathDir: string, pathDir: string, settingC: Setting, valuesC: TLValueChain) {
 		const settingFiles = settingC.settings as string[];
-		const settings = [];
-		const datas = [];
-		const srcs = [];
-		const directories = [];
+		let directories = [];
+		let files = [];
 		for await (const entry of Deno.readDir(filepathDir)) {
 			const name = entry.name;
-			const filepath = Path.join(filepathDir, name);
-			if (entry.isFile && settingFiles.some((settingFile) => settingFile === name)) {
-				settings.push({ name, filepath });
-			} else if (entry.isFile && dataFiles.some((dataFile) => dataFile === name)) {
-				datas.push({ name, filepath });
-			} else if (excludes.some((exclude) => exclude == filepath)) {
-				continue;
-			} else if (ignores.some((ignore) => !!name.match(ignore))) {
-				continue;
-			} else if (entry.isDirectory) {
-				directories.push({ name, filepath });
+			if (entry.isDirectory) {
+				directories.push(name);
 			} else if (entry.isFile) {
-				srcs.push({ name, filepath });
+				files.push(name);
 			}
 		}
-		settings.sort((a, b) => a.name.localeCompare(b.name));
-		datas.sort((a, b) => a.name.localeCompare(b.name));
-		srcs.sort((a, b) => a.name.localeCompare(b.name));
-		directories.sort((a, b) => a.name.localeCompare(b.name));
-		const values = Array.from(valuesC);
-		for (const { name, filepath } of settings) {
-			const setting = await loadSettingFile(filepath, rt);
-			console.log(setting);
+		files.sort();
+		directories.sort();
+		const [settings, settingsN] = splitArray(files, settingFiles);
+		let setting = settingC;
+		for (const name of settings) {
+			const filepath = Path.join(filepathDir, name);
+			const setting2 = await loadSettingFile(filepath, rt);
+			if (setting2) {
+				setting = mergeSetting(setting, setting2);
+			}
+			// console.log(setting);
 		}
-		for (const { name, filepath } of datas) {
+		const dataFiles = setting.data as string[];
+		const [datas, datasN] = splitArray(files, dataFiles);
+		let values = Array.from(valuesC);
+		for (const name of datas) {
+			const filepath = Path.join(filepathDir, name);
 			const value = await loadDataFile(filepath, rt);
 			values.push(value);
 		}
-		for (const { name, filepath } of srcs) {
+		let ignores: RegExp[] = [];
+		for (const ignore of setting.ignores!) {
+			const matcher = Path.globToRegExp(ignore);
+			ignores.push(matcher);
+		}
+		// console.log(ignores);
+		const srcs = datasN;
+		for (const name of srcs) {
+			const filepath = Path.join(filepathDir, name);
+			if (excludes.some((exclude) => exclude == filepath)) {
+				continue;
+			}
+			if (ignores.some((ignore) => !!name.match(ignore))) {
+				continue;
+			}
 			const path = pathDir + "/" + name;
 			const srcFile = { path, filepath, values };
 			srcFiles.push(srcFile);
 		}
-		for (const { name, filepath } of directories) {
+		for (const name of directories) {
+			const filepath = Path.join(filepathDir, name);
+			if (excludes.some((exclude) => exclude == filepath)) {
+				continue;
+			}
+			if (ignores.some((ignore) => !!name.match(ignore))) {
+				continue;
+			}
 			const path = pathDir + "/" + name;
-			await sub(filepath, path, settingC, values);
+			await sub(filepath, path, setting, values);
 		}
 	}
 	try {
