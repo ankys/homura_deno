@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 
+- add setting tree.
 - add sort filenames.
 - add data tree.
 - change file update when there is no change.

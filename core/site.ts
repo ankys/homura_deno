@@ -7,6 +7,7 @@ import { TLValue, TLValueChain, getFilepath, loadValueFile, loadFrontMatterFile,
 import { Config, Setting, Layout, Dynamic, mergeConfig, mergeSetting } from "./config.ts";
 
 export type { TLValue, TLValueChain } from "./value.ts";
+export type { Setting } from "./config.ts";
 export type Convert = (text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },
@@ -98,7 +99,7 @@ function splitArray(list: string[], list2: string[]) {
 	}
 	return [a, b];
 }
-type SrcFile = { path: string, filepath: string, values: TLValueChain };
+type SrcFile = { path: string, filepath: string, setting: Setting, values: TLValueChain };
 type SrcFiles = SrcFile[];
 export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
@@ -163,7 +164,7 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 				continue;
 			}
 			const path = pathDir + "/" + name;
-			const srcFile = { path, filepath, values };
+			const srcFile = { path, filepath, setting, values };
 			srcFiles.push(srcFile);
 		}
 		for (const name of directories) {

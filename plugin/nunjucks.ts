@@ -5,7 +5,7 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import { relativePath } from "../core/path.ts";
 import { getPathname } from "../core/pathname.ts";
 import { Matcher, newMatcher, testMatcher } from "../core/matcher.ts";
-import { Runtime, Site, DestFile, TLValueChain, getSrcValueSync } from "../core/site.ts";
+import { Runtime, Site, DestFile, TLValueChain, Setting, getSrcValueSync } from "../core/site.ts";
 
 function toEach<T1, T2>(fn: (...args: any[]) => T2) {
 	return (...args: any[]) => {
@@ -38,10 +38,9 @@ function getInfo(filepath: string): Info {
 	const mtime = info.mtime!;
 	return { fsize, mtime };
 }
-export async function convert(text: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
-	const { config, layoutCaches, srcFiles, destFiles } = site;
-	const filepathInclude = config.include!;
-	const indexFiles = config.index!;
+export async function convert(text: string, values: TLValueChain, setting: Setting, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+	const filepathInclude = setting.include!;
+	const indexFiles = setting.index!;
 	function addExtension(nunjucks: any, name: string, func: Function) {
 		const ext = {
 			tags: [name],

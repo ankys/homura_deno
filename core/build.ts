@@ -2,7 +2,7 @@
 import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import * as FS from "https://deno.land/std@0.132.0/fs/mod.ts";
 
-import { Runtime, Site, DestFile, TLValue, TLValueChain, DestFiles, loadSrcFile } from "./site.ts";
+import { Runtime, Site, DestFile, TLValue, TLValueChain, Setting, loadSrcFile } from "./site.ts";
 import { importModule } from "../plugin/lib.ts";
 
 export async function FSGetMtime(filepath: string): Promise<Date> {
@@ -21,9 +21,8 @@ async function FSIsEmptyDirectory(path: string) {
 	return true;
 }
 
-async function convertText(text: string, engine: string, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
-	const config = site.config;
-	const engines1 = config.engines!;
+async function convertText(text: string, engine: string, setting: Setting, values: TLValueChain, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
+	const engines1 = setting.engines!;
 	const engines: { [name: string]: string } = {};
 	for (const engine of engines1) {
 		const { name, url } = engine;
@@ -39,7 +38,7 @@ async function convertText(text: string, engine: string, values: TLValueChain, d
 			const [href, fn] = (m = url.match(/^([^#]*)#(.*)$/)) ? [m[1], m[2]] : [url, "default"];
 			const convert = await importModule(href, fn);
 			try {
-				text = await convert(text, values, destFile, site, rt);
+				text = await convert(text, values, setting, destFile, site, rt);
 			} catch (e) {
 				rt.showMessage("⚠️", [destFile.path], null, e);
 			}
@@ -52,6 +51,7 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 	const srcFile = destFile.srcFile;
 	const dynamicInfo = destFile.dynamicInfo!;
 	const filepathSrc = srcFile.filepath;
+	const settingSrc = srcFile.setting;
 	const valuesSrc = srcFile.values;
 	const engine = dynamicInfo.engine;
 	const layoutName = dynamicInfo.layout;
@@ -63,14 +63,14 @@ export async function buildDynamic(destFile: DestFile, title: string, site: Site
 		const textLayout = layout.text;
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")", filepathLayout, "(" + engineLayout + ")"]);
 		const [valueSrcFile, text] = (await loadSrcFile(filepathSrc, rt))!;
-		const text2 = await convertText(text, engine, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
+		const text2 = await convertText(text, engine, settingSrc, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
 		const valueContent: TLValue = { "content": text2 };
-		const text3 = await convertText(textLayout, engineLayout, valuesSrc.concat([valueLayout, valueSrcFile, valueContent]), destFile, site, rt);
+		const text3 = await convertText(textLayout, engineLayout, settingSrc, valuesSrc.concat([valueLayout, valueSrcFile, valueContent]), destFile, site, rt);
 		return text3;
 	} else {
 		rt.showMessage("🔥", [title], [filepathSrc, "(" + engine + ")"]);
 		const [valueSrcFile, text] = (await loadSrcFile(filepathSrc, rt))!;
-		const text2 = await convertText(text, engine, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
+		const text2 = await convertText(text, engine, settingSrc, valuesSrc.concat([valueSrcFile]), destFile, site, rt);
 		return text2;
 	}
 }
