@@ -23,18 +23,42 @@ export type Config = {
 	dynamics?: Dynamic[];
 	ignores?: string[];
 }
-export function mergeConfig(config1: Config, config2: Config): Config {
-	const src = config2.src || config1.src;
-	const dest = config2.dest || config1.dest;
-	const index = toA(config1.index).concat(toA(config2.index));
-	const data = toA(config1.data).concat(toA(config2.data));
-	const include = config2.include || config1.include;
-	const layout = config2.layout || config1.layout;
-	const engines = toA(config1.engines).concat(toA(config2.engines));
-	const layouts = toA(config1.layouts).concat(toA(config2.layouts));
-	const statics = toA(config1.statics).concat(toA(config2.statics));
-	const dynamics = toA(config1.dynamics).concat(toA(config2.dynamics));
-	const ignores = toA(config1.ignores).concat(toA(config2.ignores));
+export function mergeConfig(a: Config, b: Config): Config {
+	const src = b.src || a.src;
+	const dest = b.dest || a.dest;
+	const index = toA(a.index).concat(toA(b.index));
+	const data = toA(a.data).concat(toA(b.data));
+	const include = b.include || a.include;
+	const layout = b.layout || a.layout;
+	const engines = toA(a.engines).concat(toA(b.engines));
+	const layouts = toA(a.layouts).concat(toA(b.layouts));
+	const statics = toA(a.statics).concat(toA(b.statics));
+	const dynamics = toA(a.dynamics).concat(toA(b.dynamics));
+	const ignores = toA(a.ignores).concat(toA(b.ignores));
 	const config: Config = { src, dest, index, data, include, layout, engines, layouts, statics, dynamics, ignores };
 	return config;
+}
+export type Setting = {
+	index?: string[];
+	data?: string[];
+	include?: string;
+	layout?: string;
+	engines?: Engine[];
+	layouts?: Layout[];
+	statics?: Static[];
+	dynamics?: Dynamic[];
+	ignores?: string[];
+}
+export function mergeSetting(a: Config | Setting, b: Config | Setting): Setting {
+	const index = toA(a.index).concat(toA(b.index));
+	const data = toA(a.data).concat(toA(b.data));
+	const include = b.include || a.include;
+	const layout = b.layout || a.layout;
+	const engines = toA(a.engines).concat(toA(b.engines));
+	const layouts = toA(a.layouts).concat(toA(b.layouts));
+	const statics = toA(a.statics).concat(toA(b.statics));
+	const dynamics = toA(a.dynamics).concat(toA(b.dynamics));
+	const ignores = toA(a.ignores).concat(toA(b.ignores));
+	const setting: Setting = { index, data, include, layout, engines, layouts, statics, dynamics, ignores };
+	return setting;
 }
