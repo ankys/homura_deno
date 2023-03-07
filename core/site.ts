@@ -4,12 +4,13 @@ import * as Path from "https://deno.land/std@0.132.0/path/mod.ts";
 import { normalizePath } from "./path.ts";
 import { Matcher, newMatcher, testMatcher, replaceMatcher } from "./matcher.ts";
 import { TLValue, TLValueChain, getFilepath, loadValueFile, loadFrontMatterFile, loadFrontMatterFile2Sync } from "./value.ts";
-import { Config, Layout, Dynamic, mergeConfig } from "./config.ts";
+import { Config, Setting, Layout, Dynamic, mergeConfig } from "./config.ts";
 
 export type { TLValue, TLValueChain } from "./value.ts";
 export type Convert = (text: string, value: TLValueChain, destFile: DestFile, site: Site, rt: Runtime) => Promise<string>;
 export type Cache = {
 	cacheConfig: { [file: string]: [Deno.FileInfo, Config | null] },
+	cacheSetting: { [file: string]: [Deno.FileInfo, Setting | null] },
 	cacheData: { [file: string]: [Deno.FileInfo, TLValue | null] },
 	cacheLayout: { [filepath: string]: [Deno.FileInfo, TLValue | null, string] },
 	cacheSrc: { [filepath: string]: [Deno.FileInfo, TLValue | null] },
@@ -34,6 +35,19 @@ export async function loadConfigFiles(files: string[], config: Config, rt: Runti
 	return config;
 }
 
+export async function loadSettingFile(file: string, rt: Runtime) {
+	const c = rt.cache.cacheSetting[file];
+	const o = await loadValueFile<Setting>(file, c, rt);
+	if (o) {
+		const t = o;
+		const [_info, setting] = t;
+		rt.cache.cacheSetting[file] = t;
+		return setting;
+	} else {
+		delete rt.cache.cacheSetting[file];
+	}
+	return null;
+}
 export async function loadDataFile(file: string, rt: Runtime) {
 	const c = rt.cache.cacheData[file];
 	const o = await loadValueFile<TLValue>(file, c, rt);
@@ -76,6 +90,8 @@ type SrcFile = { path: string, filepath: string, values: TLValueChain };
 type SrcFiles = SrcFile[];
 export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles> {
 	const srcDir = config.src!;
+	const setting = config as Setting;
+
 	const dataFiles = config.data as string[];
 	let excludes: string[] = [];
 	for (const file of rt.configFiles) {
@@ -94,14 +110,18 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 	// console.log(ignores);
 
 	const srcFiles: SrcFiles = [];
-	async function sub(filepathDir: string, pathDir: string, valuesC: TLValueChain) {
+	async function sub(filepathDir: string, pathDir: string, settingC: Setting, valuesC: TLValueChain) {
+		const settingFiles = settingC.settings as string[];
+		const settings = [];
 		const datas = [];
 		const srcs = [];
 		const directories = [];
 		for await (const entry of Deno.readDir(filepathDir)) {
 			const name = entry.name;
 			const filepath = Path.join(filepathDir, name);
-			if (entry.isFile && dataFiles.some((dataFile) => dataFile === name)) {
+			if (entry.isFile && settingFiles.some((settingFile) => settingFile === name)) {
+				settings.push({ name, filepath });
+			} else if (entry.isFile && dataFiles.some((dataFile) => dataFile === name)) {
 				datas.push({ name, filepath });
 			} else if (excludes.some((exclude) => exclude == filepath)) {
 				continue;
@@ -113,10 +133,15 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 				srcs.push({ name, filepath });
 			}
 		}
+		settings.sort((a, b) => a.name.localeCompare(b.name));
 		datas.sort((a, b) => a.name.localeCompare(b.name));
 		srcs.sort((a, b) => a.name.localeCompare(b.name));
 		directories.sort((a, b) => a.name.localeCompare(b.name));
 		const values = Array.from(valuesC);
+		for (const { name, filepath } of settings) {
+			const setting = await loadSettingFile(filepath, rt);
+			console.log(setting);
+		}
 		for (const { name, filepath } of datas) {
 			const value = await loadDataFile(filepath, rt);
 			values.push(value);
@@ -128,12 +153,12 @@ export async function checkSrcDir(config: Config, rt: Runtime): Promise<SrcFiles
 		}
 		for (const { name, filepath } of directories) {
 			const path = pathDir + "/" + name;
-			await sub(filepath, path, values);
+			await sub(filepath, path, settingC, values);
 		}
 	}
 	try {
 		let values: TLValueChain = [];
-		await sub(srcDir, "", values);
+		await sub(srcDir, "", setting, values);
 	} catch {
 		console.log("⚠️", srcDir);
 	}

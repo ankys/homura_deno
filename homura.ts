@@ -262,7 +262,7 @@ export async function main(args: string[]) {
 			Deno.exit(2);
 		}
 	}
-	const cache: Cache = { cacheConfig: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
+	const cache: Cache = { cacheConfig: {}, cacheSetting: {}, cacheData: {}, cacheLayout: {}, cacheSrc: {} };
 	const rt: Runtime = { showMessage, configFiles, configDefault, configOption, cache };
 
 	const command = options._[0];
