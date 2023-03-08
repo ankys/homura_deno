@@ -40,7 +40,7 @@ function getInfo(filepath: string): Info {
 }
 export async function convert(text: string, values: TLValueChain, setting: Setting, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const filepathInclude = setting.include!;
-	const indexFiles = setting.index!;
+	const indexFiles = site.config.index!;
 	function addExtension(nunjucks: any, name: string, func: Function) {
 		const ext = {
 			tags: [name],

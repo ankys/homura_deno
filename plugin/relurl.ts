@@ -7,7 +7,7 @@ import { Runtime, Site, DestFile, TLValueChain, Setting } from "../core/site.ts"
 
 export async function convert(text: string, values: TLValueChain, setting: Setting, destFile: DestFile, site: Site, rt: Runtime): Promise<string> {
 	const pathBase = destFile.path;
-	const indexFiles = setting.index!;
+	const indexFiles = site.config.index!;
 	function main(url: string) {
 		if (!url.startsWith("/")) {
 			return url;

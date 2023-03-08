@@ -41,7 +41,6 @@ export function mergeConfig(a: Config, b: Config): Config {
 	return config;
 }
 export type Setting = {
-	index?: string[];
 	settings?: string[];
 	data?: string[];
 	include?: string;
@@ -53,7 +52,6 @@ export type Setting = {
 	ignores?: string[];
 }
 export function mergeSetting(a: Config | Setting, b: Config | Setting): Setting {
-	const index = toA(a.index).concat(toA(b.index));
 	const settings = toA(a.settings).concat(toA(b.settings));
 	const data = toA(a.data).concat(toA(b.data));
 	const include = b.include || a.include;
@@ -63,6 +61,6 @@ export function mergeSetting(a: Config | Setting, b: Config | Setting): Setting 
 	const statics = toA(a.statics).concat(toA(b.statics));
 	const dynamics = toA(a.dynamics).concat(toA(b.dynamics));
 	const ignores = toA(a.ignores).concat(toA(b.ignores));
-	const setting: Setting = { index, settings, data, include, layout, engines, layouts, statics, dynamics, ignores };
+	const setting: Setting = { settings, data, include, layout, engines, layouts, statics, dynamics, ignores };
 	return setting;
 }
