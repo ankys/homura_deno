@@ -3,8 +3,8 @@ engines:
     url: ./nunjucks.ts#convert
   - name: njk
     url: ./nunjucks.ts#convert
-  - name: md
-    url: ./markdown.ts#convert
+  - name: gfm
+    url: ./gfm.ts#convert
   - name: relurl
     url: ./relurl.ts#convert
 layouts:
@@ -29,7 +29,7 @@ dynamics:
     layout: default
   - pattern: .n.md
     replace: .html
-    engine: t,md
+    engine: t,gfm
     layout: default
 ignores:
   - "_*"

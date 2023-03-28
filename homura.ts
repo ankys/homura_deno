@@ -1,5 +1,5 @@
 
-import Yargs from "https://deno.land/x/yargs@v17.4.0-deno/deno.ts";
+import Yargs from "https://deno.land/x/yargs@v17.7.1-deno/deno.ts";
 
 import { version } from "./version.ts";
 import { Config } from "./core/config.ts";

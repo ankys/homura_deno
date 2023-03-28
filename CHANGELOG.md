@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+- add gfm plugin.
+- move index files from setting to config.
+
 ## [0.6.0] - 2023-03-07
 
 - add setting tree.
