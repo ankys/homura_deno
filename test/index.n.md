@@ -2,7 +2,7 @@
 title: index
 ---
 
-## section
+## section { .c }
 
 aaaa
 
