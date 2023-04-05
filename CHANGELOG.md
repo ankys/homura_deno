@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+- modify markdown-it config
+
 ## [0.6.3] - 2023-04-04
 
 - change markdown to markdown-it + markdown-it-attrs
